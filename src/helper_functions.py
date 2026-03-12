@@ -1,8 +1,9 @@
-def build_json_response(status_code, body):
-    """Builds a JSON response object to be returned by the lambda handler using the provided status code and body. The data returned in the body is returned in JSON format.
+def build_response(status_code, content_type, body):
+    """Builds a JSON response object to be returned by the lambda handler using the provided status code, content-type, and body.
 
     Args:
         status_code: int that indicates the status code of the operation
+        content_type: str that indicates the media type of the data being passed through the body
         body: str that indicates the message to be returned
     
     Returns: 
@@ -12,26 +13,7 @@ def build_json_response(status_code, body):
     return {
         'statusCode': status_code,
         'headers': {
-            'Content-Type': 'application/json'
-        },
-        'body': body
-    }
-
-def build_xml_response(status_code, body):
-    """Builds an JSON response object to be returned by the lambda handler using the provided status code and body. The data returned in the body is returned in XML format. Used for returning despatch advice documents, which follow UBL XML format.
-
-    Args:
-        status_code: int that indicates the status code of the operation
-        body: str that indicates the message to be returned
-    
-    Returns: 
-        Response: JSON object structure detailing the statusCode, Content-Type, and body
-    """
-    
-    return {
-        'statusCode': status_code,
-        'headers': {
-            'Content-Type': 'application/xml'
+            'Content-Type': content_type
         },
         'body': body
     }
