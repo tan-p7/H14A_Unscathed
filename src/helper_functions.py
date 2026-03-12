@@ -15,5 +15,5 @@ def build_response(status_code, content_type, body):
         'headers': {
             'Content-Type': content_type
         },
-        'body': body
+        'body': json.dumps(body)
     }
