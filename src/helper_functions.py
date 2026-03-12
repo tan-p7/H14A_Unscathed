@@ -3,7 +3,7 @@ def build_response(status_code, content_type, body):
 
     Args:
         status_code: int that indicates the status code of the operation
-        content_type: str that indicates the media type of the data being passed through the body
+        content_type: str that indicates the media type of the data being passed through the body. Is of either JSON or XML type, as retrieved from constants.py
         body: str that indicates the message to be returned
     
     Returns: 
