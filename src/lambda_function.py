@@ -36,7 +36,10 @@ def lambda_handler(event, context):
         pathParameters = event.get('pathParameters')
 
         # Determine the API endpoint requested and call the appropriate function 
-        if http_method == 'DELETE' and path.startswith(DESPATCH_ADVICE_PATH) and pathParameters:
+        if http_method == 'GET' and path == HEALTH_CHECK_PATH:
+          return healthCheck(event, context)
+        
+        elif http_method == 'DELETE' and path.startswith(DESPATCH_ADVICE_PATH) and pathParameters:
             despatch_id = event['pathParameters'].get('despatch-id')
 
             # Validate despatch_id is provided and is a positive integer
@@ -68,17 +71,13 @@ def healthCheck(event, context):
         Response: JSON object structure containing the HTTP statusCode, Content-Type,
                   and body message.
     """
-  
-    http_method = event.get('httpMethod')
-    path = event.get('path')
-    if http_method == 'GET' and path == HEALTH_CHECK_PATH:
-      try:
-        status = dynamodb_table.table_status
-        if status == 'ACTIVE':
-          response = build_response(200, JSON_TYPE, 'Service is operational')
-        else:
-          response = build_response(503, JSON_TYPE, 'Table not ready')
-      except Exception as e:
-        print('Error:', e)
-        response = build_response(503, JSON_TYPE, 'Error processing request')
-      return response
+    try:
+      status = dynamodb_table.table_status
+      if status == 'ACTIVE':
+        response = build_response(200, JSON_TYPE, 'Service is operational')
+      else:
+        response = build_response(503, JSON_TYPE, 'Table not ready')
+    except Exception as e:
+      print('Error:', e)
+      response = build_response(503, JSON_TYPE, 'Error processing request')
+    return response
