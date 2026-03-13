@@ -1,6 +1,7 @@
 # Import required modules for the API
 import json
 import boto3
+from db import dynamodb_table
 from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key
 
@@ -8,9 +9,6 @@ from boto3.dynamodb.conditions import Key
 from helper_functions import build_response
 from constants import JSON_TYPE
 
-# Initialise DynamoDB table
-dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
-dynamodb_table = dynamodb.Table('despatch_advices')
 
 def delete_despatch_advice(despatch_id):
     """ Deletes the despatch advice with the corresponding despatch ID if the ID provided is valid.
