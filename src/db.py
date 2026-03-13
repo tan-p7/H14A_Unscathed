@@ -1,0 +1,4 @@
+import boto3
+
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+dynamodb_table = dynamodb.Table('despatch_advices')
