@@ -31,7 +31,7 @@ def get_despatch_advice_by_id(despatch_id):
             return build_response(404, JSON_TYPE, f'Despatch advice {despatch_id} not found')
 
         # Else return the despatch advice document
-        return build_response(200, XML_TYPE, response['Item']['document'])
+        return build_response(200, XML_TYPE, response['Item']['despatch_ubl'])
 
     except ClientError as e:
         print('Error:', e)
