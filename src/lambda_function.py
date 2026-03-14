@@ -81,12 +81,12 @@ def healthCheck(event, context):
                   and body message.
     """
     try:
-        status = dynamodb_table.table_status
-        if status == 'ACTIVE':
-            response = build_response(200, JSON_TYPE, 'Service is operational')
-        else:
-            response = build_response(503, JSON_TYPE, 'Table not ready')
-    except Exception as e:
-        print('Error:', e)
-        response = build_response(503, JSON_TYPE, 'Error processing request')
+      status = dynamodb_table.table_status
+      if status == 'ACTIVE':
+        response = build_response(200, JSON_TYPE, 'Service is operational')
+      else:
+        response = build_response(503, JSON_TYPE, 'Table not ready')
+    except ClientError as e:
+      print('Error:', e)
+      response = build_response(503, JSON_TYPE, 'Error processing request')
     return response
