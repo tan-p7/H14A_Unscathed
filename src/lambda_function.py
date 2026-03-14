@@ -1,14 +1,14 @@
 # Import required modules for the API
 import json
 import boto3
-from db import dynamodb_table
+from src.db import dynamodb_table
 from botocore.exceptions import ClientError
 
 # Import functions and constants that perform the core data processing
-from helper_functions import build_response
-from constants import JSON_TYPE
-from delete_despatch import delete_despatch_advice
-from retrieve_despatch_by_id import get_despatch_advice_by_id
+from src.helper_functions import build_response
+from src.constants import JSON_TYPE
+from src.delete_despatch import delete_despatch_advice
+from src.retrieve_despatch_by_id import get_despatch_advice_by_id
 
 # Initialise URL constants
 BASE_URL = '/api/despatch'
