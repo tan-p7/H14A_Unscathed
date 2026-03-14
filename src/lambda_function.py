@@ -8,6 +8,7 @@ from botocore.exceptions import ClientError
 from helper_functions import build_response
 from constants import JSON_TYPE
 from delete_despatch import delete_despatch_advice
+from retrieve_despatch_by_id import get_despatch_advice_by_id
 
 # Initialise URL constants
 BASE_URL = '/api/despatch'
@@ -34,11 +35,19 @@ def lambda_handler(event, context):
         http_method = event.get('httpMethod')
         path = event.get('path')
         pathParameters = event.get('pathParameters')
-
+        
         # Determine the API endpoint requested and call the appropriate function 
         if http_method == 'GET' and path == HEALTH_CHECK_PATH:
-          return healthCheck(event, context)
-        
+            return healthCheck(event, context)
+        elif http_method == 'GET' and path.startswith(DESPATCH_ADVICE_PATH) and pathParameters:
+            despatch_id = event['pathParameters'].get('despatch-id')
+
+            # Validate despatch_id is provided and is a positive integer
+            if not despatch_id or not despatch_id.isdigit():
+                response = build_response(404, JSON_TYPE, "Not Found")
+            else:
+                despatch_id = int(despatch_id)
+                response = get_despatch_advice_by_id(despatch_id)
         elif http_method == 'DELETE' and path.startswith(DESPATCH_ADVICE_PATH) and pathParameters:
             despatch_id = event['pathParameters'].get('despatch-id')
 
@@ -77,7 +86,7 @@ def healthCheck(event, context):
         response = build_response(200, JSON_TYPE, 'Service is operational')
       else:
         response = build_response(503, JSON_TYPE, 'Table not ready')
-    except Exception as e:
+    except ClientError as e:
       print('Error:', e)
       response = build_response(503, JSON_TYPE, 'Error processing request')
     return response
