@@ -1,19 +1,9 @@
 # Import xml parsing module
 import xml.etree.ElementTree as ET
 
-# Import functions required for testing
-from src.lambda_function import lambda_handler
-from src.delete_despatch import delete_despatch_advice
-from src.retrieve_despatch_by_id import get_despatch_advice_by_id
+# Import functions required for testing helpers
 from src.generate_despatch import generate_despatch
-from constants import order1, order2, order3
-
-# Define namespaces used in UBL 2.4
-namespaces = {
-    'xmlns': 'urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2',
-    'cbc': 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2',
-    'cac': 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'
-}
+from constants import order1, order2, order3, namespaces
 
 # General helper functions for the API
 def build_response(status_code, content_type, body):

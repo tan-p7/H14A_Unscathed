@@ -2,6 +2,13 @@
 JSON_TYPE = 'application/json'
 XML_TYPE = 'application/xml'
 
+# Define namespaces used in UBL 2.4
+namespaces = {
+    'xmlns': 'urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2',
+    'cbc': 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2',
+    'cac': 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'
+}
+
 # Sample Order documents for testing purposes
 ORDER_DOC_1 = """<?xml version="1.0" encoding="UTF-8"?>
 <Order xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns="urn:oasis:names:specification:ubl:schema:xsd:Order-2">

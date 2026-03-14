@@ -3,13 +3,12 @@
 # Potentially unnecessary: LAMBDA_URL may not be needed in event object
 
 # Import python modules
-import requests
 import pytest
 import xml.etree.ElementTree as ET
 
 # Import functions required for testing
 from src.lambda_function import lambda_handler
-from src.constants import order1, order2, order3
+from src.constants import order1
 from src.delete_despatch import delete_despatch_advice
 from src.retrieve_despatch_by_id import get_despatch_advice_by_id
 from src.generate_despatch import generate_despatch
