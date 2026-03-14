@@ -63,7 +63,7 @@ def lambda_handler(event, context):
     # Handle any errors raised accordingly
     except Exception as e:
         print('Error:', e)
-        response = build_response(400, JSON_TYPE, 'Error processing request')
+        response = build_response(500, JSON_TYPE, 'Server error: Error processing request')
    
     return response
 
@@ -81,12 +81,12 @@ def healthCheck(event, context):
                   and body message.
     """
     try:
-      status = dynamodb_table.table_status
-      if status == 'ACTIVE':
-        response = build_response(200, JSON_TYPE, 'Service is operational')
-      else:
-        response = build_response(503, JSON_TYPE, 'Table not ready')
+        status = dynamodb_table.table_status
+        if status == 'ACTIVE':
+            response = build_response(200, JSON_TYPE, 'Service is operational')
+        else:
+            response = build_response(503, JSON_TYPE, 'Table not ready')
     except ClientError as e:
-      print('Error:', e)
-      response = build_response(503, JSON_TYPE, 'Error processing request')
+        print('Error:', e)
+        response = build_response(400, JSON_TYPE, e.response['Error']['Message'])
     return response
