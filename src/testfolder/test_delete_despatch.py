@@ -4,7 +4,6 @@
 
 # Import python modules
 import pytest
-import xml.etree.ElementTree as ET
 
 # Import functions required for testing
 from src.lambda_function import lambda_handler
