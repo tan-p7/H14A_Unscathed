@@ -77,7 +77,7 @@ def healthCheck(event, context):
         response = build_response(200, JSON_TYPE, 'Service is operational')
       else:
         response = build_response(503, JSON_TYPE, 'Table not ready')
-    except Exception as e:
+    except ClientError as e:
       print('Error:', e)
       response = build_response(503, JSON_TYPE, 'Error processing request')
     return response
