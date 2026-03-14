@@ -1,3 +1,4 @@
+import json
 def build_response(status_code, content_type, body):
     """Builds a JSON response object to be returned by the lambda handler using the provided status code, content-type, and body.
 

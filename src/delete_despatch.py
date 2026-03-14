@@ -1,13 +1,13 @@
 # Import required modules for the API
 import json
 import boto3
-from db import dynamodb_table
+from src.db import dynamodb_table
 from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key
 
 # Import helper function and constants to build the JSON response
-from helper_functions import build_response
-from constants import JSON_TYPE
+from src.helper_functions import build_response
+from src.constants import JSON_TYPE
 
 
 def delete_despatch_advice(despatch_id):
