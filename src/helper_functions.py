@@ -83,3 +83,8 @@ def generate_three_despatch_advices_and_return_ids():
         despatch_ids.append(despatch_id)
     
     return despatch_ids
+
+def generate_despatch_advice_and_return_id():
+    generate_response = generate_despatch(order1, {})
+    despatch_advice = generate_response.get('xml', '')
+    return parse_despatch_advice_and_return_id(despatch_advice)

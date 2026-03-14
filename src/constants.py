@@ -577,3 +577,10 @@ order3 = {
     "note": "Delivery will be significantly delayed"
     "xml": ORDER_DOC_3
 }
+
+updated_order = {
+    "deliveredQuantity": "10",
+    "backorderQuantity": "0",
+    "backorderReason": "",
+    "note": ""
+}
