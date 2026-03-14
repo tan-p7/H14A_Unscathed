@@ -21,7 +21,7 @@ def get_despatch_advice_by_id(despatch_id):
 
     try:
         # Try to retrieve the despatch advice using despatch_id
-        response = dynamodb_table.get_item(Key={'despatch_id': despatch_id})
+        response = dynamodb_table.get_item(Key={'despatchId': despatch_id})
 
         # Return error if despatch advice does not exist
         if 'Item' not in response:
