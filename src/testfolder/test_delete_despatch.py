@@ -9,75 +9,16 @@ import xml.etree.ElementTree as ET
 
 # Import functions required for testing
 from src.lambda_function import lambda_handler
-from src.constants import ORDER_DOC_1, ORDER_DOC_2, ORDER_DOC_3 
+from src.constants import order1, order2, order3
 from src.delete_despatch import delete_despatch_advice
 from src.retrieve_despatch_by_id import get_despatch_advice_by_id
 from src.generate_despatch import generate_despatch
+from src.helper_functions import parse_despatch_advice_and_return_id, parse_despatch_advice_and_return_success_boolean, generate_three_despatch_advices_and_return_ids
 
 # Initialise URL constants
 LAMBDA_URL = ''
 BASE_URL = LAMBDA_URL + '/api/despatch'
 DESPATCH_ADVICE_PATH = BASE_URL + '/despatch-advice'
-
-# Define namespaces used in UBL 2.4
-namespaces = {
-    'xmlns': 'urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2',
-    'cbc': 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2',
-    'cac': 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'
-}
-
-# Create sample JSON bodies to be passed into despatch generation function
-order1 = {
-    "deliveredQuantity": "90",
-    "backorderQuantity": "10",
-    "backorderReason": "Out of stock",
-    "note": "Beeswax will be restocked on Friday"
-    "xml": ORDER_DOC_1
-}
-
-order2 = {
-    "deliveredQuantity": "100",
-    "xml": ORDER_DOC_2
-}
-
-order3 = {
-    "deliveredQuantity": "20",
-    "backorderQuantity": "80",
-    "backorderReason": "Suppliers lost their last crate of bananas",
-    "note": "Delivery will be significantly delayed"
-    "xml": ORDER_DOC_3
-}
-
-
-# Helper functions for repeated code
-def parse_despatch_advice_and_return_id(despatch_advice):
-    # Setup XML parsing for generated despatch advice document
-    tree = ET.fromstring(despatch_advice)
-    root = tree.getroot()
-
-    # Find the despatch_id in the despatch advice
-    despatch_id = root.find('cbc:ID', namespaces).text
-    return int(despatch_id)
-
-def parse_despatch_advice_and_return_success_boolean(despatch_advice):
-    try:
-        ET.fromstring(despatch_advice)
-    except ET.ParseError:
-        return False
-    return True
-
-def generate_three_despatch_advices_and_return_ids():
-    despatch_ids = []
-    order_documents = [ order1, order2, order3 ]
-
-    # Generate three despatch advices and retrieve their despatch_id
-    for order in order_documents:
-        generate_response = generate_despatch(order, {})
-        despatch_advice = generate_response.get('xml', '')
-        despatch_id = parse_despatch_advice_and_return_id(despatch_advice)
-        despatch_ids.append(despatch_id)
-    
-    return despatch_ids
 
 
 # Unit/integration testing

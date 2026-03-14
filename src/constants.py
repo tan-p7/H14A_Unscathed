@@ -1,6 +1,8 @@
+# Constants to indicate Content_Type of HTTP response
 JSON_TYPE = 'application/json'
 XML_TYPE = 'application/xml'
 
+# Sample Order documents for testing purposes
 ORDER_DOC_1 = """<?xml version="1.0" encoding="UTF-8"?>
 <Order xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns="urn:oasis:names:specification:ubl:schema:xsd:Order-2">
 	<cbc:UBLVersionID>2.0</cbc:UBLVersionID>
@@ -546,3 +548,25 @@ ORDER_DOC_3 = """<?xml version="1.0" encoding="UTF-8"?>
 	</cac:OrderLine>
 </Order>
 """
+
+# Sample JSON bodies for order documents to be passed into functions for testing
+order1 = {
+    "deliveredQuantity": "90",
+    "backorderQuantity": "10",
+    "backorderReason": "Out of stock",
+    "note": "Beeswax will be restocked on Friday"
+    "xml": ORDER_DOC_1
+}
+
+order2 = {
+    "deliveredQuantity": "100",
+    "xml": ORDER_DOC_2
+}
+
+order3 = {
+    "deliveredQuantity": "20",
+    "backorderQuantity": "80",
+    "backorderReason": "Suppliers lost their last crate of bananas",
+    "note": "Delivery will be significantly delayed"
+    "xml": ORDER_DOC_3
+}
