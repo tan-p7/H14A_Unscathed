@@ -130,10 +130,9 @@ def append_party(parent, party: dict):
         if contact.get('telefax'):   cbc_add(ce, 'Telefax',        contact['telefax'])
         if contact.get('email'):     cbc_add(ce, 'ElectronicMail', contact['email'])
  
-def generate_despatch(event, context):
+def generate_despatch(order_xml_string):
 
     try:
-        order_xml_string = event['body']
 
         ## schema validation -> ensures given document passes required schema
         schema = xmlschema.XMLSchema('schemas/maindoc/UBL-Order-2.4.xsd')
