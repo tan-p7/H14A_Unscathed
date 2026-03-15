@@ -5,15 +5,15 @@ from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key
 
 # Import helper function and constants to build the JSON response
-from helper_functions import build_response
-from constants import JSON_TYPE, XML_TYPE
-from db import dynamodb_table
+from src.helper_functions import build_response
+from src.constants import JSON_TYPE, XML_TYPE
+import src.db
 
 def get_despatch_advice_by_id(despatch_id):
     """ Retrieves the despatch advice with the corresponding despatch ID if the ID provided is valid.
 
     Args:
-        despatch_id: int that indicates the corresponding ID of the despatch advice document to be retrieved
+        despatch_id: str that indicates the corresponding ID of the despatch advice document to be retrieved
     
     Returns: 
         Response: JSON object structure detailing the statusCode, Content-Type, and body
@@ -21,7 +21,7 @@ def get_despatch_advice_by_id(despatch_id):
 
     try:
         # Try to retrieve the despatch advice using despatch_id
-        response = dynamodb_table.get_item(Key={'despatchId': despatch_id})
+        response = src.db.dynamodb_table.get_item(Key={'despatch_id': despatch_id})
 
         # Return error if despatch advice does not exist
         if 'Item' not in response:
@@ -32,4 +32,4 @@ def get_despatch_advice_by_id(despatch_id):
 
     except ClientError as e:
         print('Error:', e)
-        return build_response(400, JSON_TYPE, e.response['Error']['Message'])
+        return build_response(503, JSON_TYPE, e.response['Error']['Message'])

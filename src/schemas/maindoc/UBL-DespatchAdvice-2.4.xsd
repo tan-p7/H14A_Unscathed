@@ -1,0 +1,40 @@
+<xsd:schema xmlns="urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:xsd="http://www.w3.org/2001/XMLSchema" targetNamespace="urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2" elementFormDefault="qualified" attributeFormDefault="unqualified" version="2.4">
+<script id="eppiocemhmnlbhjplcgkofciiegomcon"/>
+<script/>
+<script/>
+<xsd:import namespace="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" schemaLocation="../common/UBL-CommonAggregateComponents-2.4.xsd"/>
+<xsd:import namespace="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" schemaLocation="../common/UBL-CommonBasicComponents-2.4.xsd"/>
+<xsd:import namespace="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" schemaLocation="../common/UBL-CommonExtensionComponents-2.4.xsd"/>
+<xsd:element name="DespatchAdvice" type="DespatchAdviceType"/>
+<xsd:complexType name="DespatchAdviceType">
+<xsd:sequence>
+<xsd:element ref="ext:UBLExtensions" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="cbc:UBLVersionID" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="cbc:CustomizationID" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="cbc:ProfileID" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="cbc:ProfileExecutionID" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="cbc:ID" minOccurs="1" maxOccurs="1"/>
+<xsd:element ref="cbc:CopyIndicator" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="cbc:UUID" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="cbc:IssueDate" minOccurs="1" maxOccurs="1"/>
+<xsd:element ref="cbc:IssueTime" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="cbc:DocumentStatusCode" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="cbc:DespatchAdviceTypeCode" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="cbc:Note" minOccurs="0" maxOccurs="unbounded"/>
+<xsd:element ref="cbc:AccountingCostCode" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="cbc:AccountingCost" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="cbc:LineCountNumeric" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="cac:OrderReference" minOccurs="0" maxOccurs="unbounded"/>
+<xsd:element ref="cac:ProjectReference" minOccurs="0" maxOccurs="unbounded"/>
+<xsd:element ref="cac:AdditionalDocumentReference" minOccurs="0" maxOccurs="unbounded"/>
+<xsd:element ref="cac:Signature" minOccurs="0" maxOccurs="unbounded"/>
+<xsd:element ref="cac:DespatchSupplierParty" minOccurs="1" maxOccurs="1"/>
+<xsd:element ref="cac:DeliveryCustomerParty" minOccurs="1" maxOccurs="1"/>
+<xsd:element ref="cac:BuyerCustomerParty" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="cac:SellerSupplierParty" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="cac:OriginatorCustomerParty" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="cac:Shipment" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="cac:DespatchLine" minOccurs="1" maxOccurs="unbounded"/>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:schema>
