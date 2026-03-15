@@ -1,7 +1,9 @@
+import json
 import pytest
 import xml.etree.ElementTree as ET
 from unittest.mock import patch, MagicMock
-from generate_despatch import generate_despatch
+from src.generate_despatch import generate_despatch
+from src.constants import XML_TYPE
 
 # ── Namespaces ──────────────────────────────────────────────────────────────
 NS_CBC = 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2'
@@ -68,36 +70,43 @@ def make_event(xml_string):
 
 
 def parse_response_xml(response):
-    """Helper to parse the returned despatch XML string."""
-    return ET.fromstring(response['body'].encode())
+    """Helper to parse the returned despatch XML string (body may be JSON-encoded via build_response)."""
+    body = response['body']
+    if isinstance(body, str) and body.strip().startswith('"'):
+        body = json.loads(body)
+    return ET.fromstring(body.encode() if isinstance(body, str) else body)
 
 
 # ── Tests: valid despatch advice ─────────────────────────────────────────────
 
 class TestValidDespatch:
 
-    @patch('generate_despatch.xmlschema.XMLSchema')
-    def test_returns_200(self, mock_schema):
+    @patch('src.generate_despatch.dynamodb_table')
+    @patch('src.generate_despatch.xmlschema.XMLSchema')
+    def test_returns_200(self, mock_schema, mock_db):
         mock_schema.return_value.validate.return_value = None  # skip real schema
         response = generate_despatch(make_event(VALID_ORDER_XML), {})
         assert response['statusCode'] == 200
 
-    @patch('generate_despatch.xmlschema.XMLSchema')
-    def test_returns_xml_content_type(self, mock_schema):
+    @patch('src.generate_despatch.dynamodb_table')
+    @patch('src.generate_despatch.xmlschema.XMLSchema')
+    def test_returns_xml_content_type(self, mock_schema, mock_db):
         mock_schema.return_value.validate.return_value = None
         response = generate_despatch(make_event(VALID_ORDER_XML), {})
-        assert response['headers']['Content-Type'] == 'application/xml'
+        assert response['headers']['Content-Type'] == XML_TYPE
 
-    @patch('generate_despatch.xmlschema.XMLSchema')
-    def test_body_is_valid_xml(self, mock_schema):
+    @patch('src.generate_despatch.dynamodb_table')
+    @patch('src.generate_despatch.xmlschema.XMLSchema')
+    def test_body_is_valid_xml(self, mock_schema, mock_db):
         mock_schema.return_value.validate.return_value = None
         response = generate_despatch(make_event(VALID_ORDER_XML), {})
         # should not raise
         root = parse_response_xml(response)
         assert root is not None
 
-    @patch('generate_despatch.xmlschema.XMLSchema')
-    def test_order_reference_id_matches(self, mock_schema):
+    @patch('src.generate_despatch.dynamodb_table')
+    @patch('src.generate_despatch.xmlschema.XMLSchema')
+    def test_order_reference_id_matches(self, mock_schema, mock_db):
         mock_schema.return_value.validate.return_value = None
         response = generate_despatch(make_event(VALID_ORDER_XML), {})
         root = parse_response_xml(response)
@@ -106,16 +115,18 @@ class TestValidDespatch:
         )
         assert order_ref_id == 'ORD-001'
 
-    @patch('generate_despatch.xmlschema.XMLSchema')
-    def test_despatch_line_quantity(self, mock_schema):
+    @patch('src.generate_despatch.dynamodb_table')
+    @patch('src.generate_despatch.xmlschema.XMLSchema')
+    def test_despatch_line_quantity(self, mock_schema, mock_db):
         mock_schema.return_value.validate.return_value = None
         response = generate_despatch(make_event(VALID_ORDER_XML), {})
         root = parse_response_xml(response)
         qty = root.findtext(f'.//{{{NS_CBC}}}DeliveredQuantity')
         assert qty == '5'
 
-    @patch('generate_despatch.xmlschema.XMLSchema')
-    def test_delivery_address_populated(self, mock_schema):
+    @patch('src.generate_despatch.dynamodb_table')
+    @patch('src.generate_despatch.xmlschema.XMLSchema')
+    def test_delivery_address_populated(self, mock_schema, mock_db):
         mock_schema.return_value.validate.return_value = None
         response = generate_despatch(make_event(VALID_ORDER_XML), {})
         root = parse_response_xml(response)
@@ -124,8 +135,9 @@ class TestValidDespatch:
         )
         assert city == 'Melbourne'
 
-    @patch('generate_despatch.xmlschema.XMLSchema')
-    def test_delivery_dates_auto_generated(self, mock_schema):
+    @patch('src.generate_despatch.dynamodb_table')
+    @patch('src.generate_despatch.xmlschema.XMLSchema')
+    def test_delivery_dates_auto_generated(self, mock_schema, mock_db):
         mock_schema.return_value.validate.return_value = None
         response = generate_despatch(make_event(VALID_ORDER_XML), {})
         root = parse_response_xml(response)
@@ -135,8 +147,9 @@ class TestValidDespatch:
         assert end is not None
         assert end > start  # end date is after start date
 
-    @patch('generate_despatch.xmlschema.XMLSchema')
-    def test_multiple_order_lines(self, mock_schema):
+    @patch('src.generate_despatch.dynamodb_table')
+    @patch('src.generate_despatch.xmlschema.XMLSchema')
+    def test_multiple_order_lines(self, mock_schema, mock_db):
         mock_schema.return_value.validate.return_value = None
         multi_line_xml = VALID_ORDER_XML.replace(
             '</Order>',
@@ -165,7 +178,7 @@ class TestErrorCases:
         response = generate_despatch(make_event(""), {})
         assert response['statusCode'] == 400
 
-    @patch('generate_despatch.xmlschema.XMLSchema')
+    @patch('src.generate_despatch.xmlschema.XMLSchema')
     def test_schema_validation_failure_returns_400(self, mock_schema):
         import xmlschema
         mock_schema.return_value.validate.side_effect = (
@@ -173,8 +186,9 @@ class TestErrorCases:
         )
         response = generate_despatch(make_event(VALID_ORDER_XML), {})
         assert response['statusCode'] == 400
-        assert 'Invalid Order XML' in response['body']
+        assert 'Invalid Order XML' in json.loads(response['body'])
 
     def test_missing_body_key_returns_400(self):
         response = generate_despatch({}, {})  # no 'body' key
         assert response['statusCode'] == 400
+

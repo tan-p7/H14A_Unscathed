@@ -3,6 +3,11 @@ import xml.etree.ElementTree as ET
 import xmlschema
 import uuid
 from datetime import datetime, timedelta
+from botocore.exceptions import ClientError
+
+from src.helper_functions import build_response
+from src.constants import JSON_TYPE, XML_TYPE
+from src.db import dynamodb_table
 
 ## NAMESPACES!!
 NS_CBC = 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2'
@@ -41,6 +46,56 @@ def append_address(parent, addr: dict):
     if addr.get('countryCode'):
         c = cac_add(parent, 'Country')
         cbc_add(c, 'IdentificationCode', addr['countryCode'])
+
+def _party_el_to_dict(party_el):
+    """
+    Convert a UBL Party XML element to a dict suitable for append_party.
+    Returns an empty dict if party_el is None.
+    """
+    if party_el is None:
+        return {}
+    addr_el = party_el.find(f'{{{NS_CAC}}}PostalAddress')
+    address = None
+    if addr_el is not None:
+        address = {
+            'streetName':       addr_el.findtext(f'{{{NS_CBC}}}StreetName') or None,
+            'buildingName':     addr_el.findtext(f'{{{NS_CBC}}}BuildingName') or None,
+            'buildingNumber':   addr_el.findtext(f'{{{NS_CBC}}}BuildingNumber') or None,
+            'cityName':         addr_el.findtext(f'{{{NS_CBC}}}CityName') or None,
+            'postalZone':       addr_el.findtext(f'{{{NS_CBC}}}PostalZone') or None,
+            'countrySubentity': addr_el.findtext(f'{{{NS_CBC}}}CountrySubentity') or None,
+            'addressLine':      addr_el.findtext(f'{{{NS_CAC}}}AddressLine/{{{NS_CBC}}}Line') or None,
+            'countryCode':      addr_el.findtext(f'{{{NS_CAC}}}Country/{{{NS_CBC}}}IdentificationCode') or None,
+        }
+    tax_el = party_el.find(f'{{{NS_CAC}}}PartyTaxScheme')
+    tax_scheme = None
+    if tax_el is not None:
+        ts_el = tax_el.find(f'{{{NS_CAC}}}TaxScheme')
+        tax_scheme = {
+            'registrationName': tax_el.findtext(f'{{{NS_CBC}}}RegistrationName') or None,
+            'companyID':        tax_el.findtext(f'{{{NS_CBC}}}CompanyID') or None,
+            'exemptionReason':  tax_el.findtext(f'{{{NS_CBC}}}ExemptionReason') or None,
+            'schemeID':         ts_el.findtext(f'{{{NS_CBC}}}ID') if ts_el is not None else 'VAT',
+            'taxTypeCode':      ts_el.findtext(f'{{{NS_CBC}}}TaxTypeCode') if ts_el is not None else 'VAT',
+        }
+    contact_el = party_el.find(f'{{{NS_CAC}}}Contact')
+    contact = None
+    if contact_el is not None:
+        contact = {
+            'name':      contact_el.findtext(f'{{{NS_CBC}}}Name') or None,
+            'telephone': contact_el.findtext(f'{{{NS_CBC}}}Telephone') or None,
+            'telefax':   contact_el.findtext(f'{{{NS_CBC}}}Telefax') or None,
+            'email':     contact_el.findtext(f'{{{NS_CBC}}}ElectronicMail') or None,
+        }
+    name_el = party_el.find(f'{{{NS_CAC}}}PartyName')
+    name = name_el.findtext(f'{{{NS_CBC}}}Name') if name_el is not None else None
+    return {
+        'name':     name,
+        'address':  address,
+        'taxScheme': tax_scheme,
+        'contact':  contact,
+    }
+
 
 def append_party(parent, party: dict):
     """
@@ -85,15 +140,13 @@ def generate_despatch(event, context):
         try:
             schema.validate(order_xml_string)
         except xmlschema.XMLSchemaValidationError as e:
-            return {'statusCode': 400, 'body': f'Invalid Order XML: {e}'}
+            return build_response(400, JSON_TYPE, f'Invalid Order XML: {e}')
 
 
         root = ET.fromstring(order_xml_string.encode())
  
         order_id = root.findtext(f'{{{NS_CBC}}}ID') or 'UNKNOWN'
         issue_date = root.findtext(f'{{{NS_CBC}}}IssueDate') or ''
-        buyer_customer_party = root.find(f'{{{NS_CBC}}}BuyerCustomerParty') or ''
-        seller_supplier_party = root.find(f'{{{NS_CBC}}}SellerSupplierParty') or ''
         sales_order_id = root.findtext(f'.//{{{NS_CAC}}}OrderReference/{{{NS_CBC}}}SalesOrderID') or ''
         order_uuid     = root.findtext(f'.//{{{NS_CAC}}}OrderReference/{{{NS_CBC}}}UUID') or ''
 
@@ -109,7 +162,6 @@ def generate_despatch(event, context):
         supplier_account_id = supplier_el.findtext(f'{{{NS_CBC}}}CustomerAssignedAccountID') if supplier_el is not None else ''
  
         # Delivery address 
-        # TODO: contract deets??
         delivery_el      = root.find(f'{{{NS_CAC}}}Delivery')
         delivery_addr_el = delivery_el.find(f'{{{NS_CAC}}}DeliveryAddress') if delivery_el is not None else None
         if delivery_addr_el is None and buyer_party_el is not None:
@@ -151,10 +203,12 @@ def generate_despatch(event, context):
         da = ET.Element(f'{{{NS_UBL}}}DespatchAdvice')
 
 
+        # Use a string despatch_id to match DynamoDB partition key type
+        despatch_id = str(uuid.uuid4().int)[:9]
         cbc_add(da, 'UBLVersionID',          '2.0')
         cbc_add(da, 'CustomizationID',       'urn:oasis:names:specification:ubl:xpath:DespatchAdvice-2.0:sbs-1.0-draft')
         cbc_add(da, 'ProfileID',             'bpid:urn:oasis:names:draft:bpss:ubl-2-sbs-despatch-advice-notification-draft')
-        cbc_add(da, 'ID',                    str(uuid.uuid4().int)[:6])
+        cbc_add(da, 'ID',                    despatch_id)
         cbc_add(da, 'CopyIndicator',         'false')
         cbc_add(da, 'UUID',                  str(uuid.uuid4()).upper())
         cbc_add(da, 'IssueDate',             issue_date_today)
@@ -173,9 +227,9 @@ def generate_despatch(event, context):
         # -- <cac:DespatchSupplierParty> --
         # The supplier who is sending the goods
         dsp = cac_add(da, 'DespatchSupplierParty')
-       
-        cbc_add(dsp, 'CustomerAssignedAccountID', seller_supplier_party)
-        append_party(dsp, supplier_party_el)
+        if supplier_account_id:
+            cbc_add(dsp, 'CustomerAssignedAccountID', supplier_account_id)
+        append_party(dsp, _party_el_to_dict(supplier_party_el))
 
         # -- <cac:DeliveryCustomerParty> --
         # The customer who is receiving the goods
@@ -185,8 +239,7 @@ def generate_despatch(event, context):
 
         if buyer_supplier_account_id:
             cbc_add(dcp, 'SupplierAssignedAccountID', buyer_supplier_account_id)
-        if buyer_party_el is not None:
-            append_party(dcp, buyer_party_el)
+        append_party(dcp, _party_el_to_dict(buyer_party_el))
  
         # <cac:Shipment> — delivery address and delivery window
         shipment    = cac_add(da, 'Shipment')
@@ -228,18 +281,21 @@ def generate_despatch(event, context):
                 sid = cac_add(item, 'SellersItemIdentification')
                 cbc_add(sid, 'ID', line['sellersItemID'])
  
-        # RETURN
+        # Store in DynamoDB and return
         despatch_xml = ET.tostring(da, encoding='unicode')
-        return {
-            'statusCode': 200,
-            'headers': {'Content-Type': 'application/xml'},
-            'body': despatch_xml,
-        }
-    
+        try:
+            dynamodb_table.put_item(
+                Item={
+                    'despatch_id': despatch_id,
+                    'despatch_ubl': despatch_xml,
+                }
+            )
+        except ClientError as e:
+            print('Error:', e)
+            return build_response(400, JSON_TYPE, e.response['Error']['Message'])
+
+        return build_response(200, XML_TYPE, despatch_xml)
 
     except Exception as e:
-        return {
-            "statusCode": 400,
-            "body": str(e)
-        }
+        return build_response(400, JSON_TYPE, str(e))
     
