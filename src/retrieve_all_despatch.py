@@ -5,7 +5,7 @@ from botocore.exceptions import ClientError
 # Import helper function and constants to build the JSON response
 from src.helper_functions import build_response
 from src.constants import JSON_TYPE, XML_TYPE
-from src.db import dynamodb_table
+import src.db
 
 # Namespaces 
 NS_UBL = 'urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2'
@@ -21,7 +21,7 @@ def retrieve_all_despatch_advice():
 
     try: 
         # Scan all stored despatch advice documents
-        response = dynamodb_table.scan()
+        response = src.db.dynamodb_table.scan()
 
         # Get the items from the response
         items = response.get('Items', [])

@@ -1,7 +1,7 @@
 # Import required modules for the API
 import json
 import boto3
-from src.db import dynamodb_table
+import src.db
 from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key
 
@@ -22,7 +22,7 @@ def delete_despatch_advice(despatch_id):
 
     try:
         # Try delete the despatch advice using despatch_id
-        response = dynamodb_table.delete_item(
+        response = src.db.dynamodb_table.delete_item(
             Key={'despatch_id': despatch_id},
             ReturnValues='ALL_OLD'
         )
