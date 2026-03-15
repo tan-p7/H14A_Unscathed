@@ -1,7 +1,8 @@
 # Import required modules for the API
 import json
 import boto3
-from src.db import dynamodb_table
+import src.db
+#from src.db import dynamodb_table
 from botocore.exceptions import ClientError
 
 # Import functions and constants that perform the core data processing
@@ -86,7 +87,7 @@ def healthCheck(event, context):
                   and body message.
     """
     try:
-        status = dynamodb_table.table_status
+        status = src.db.dynamodb_table.table_status
         if status == 'ACTIVE':
             response = build_response(200, JSON_TYPE, 'Service is operational')
         else:
