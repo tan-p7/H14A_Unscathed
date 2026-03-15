@@ -5,10 +5,6 @@ from unittest.mock import patch, MagicMock, PropertyMock
 from botocore.exceptions import ClientError
 from src.lambda_function import healthCheck
 
-# Makes a mock database anytime db from the healthCheck function in lambda_function.py is called
-mock_db = MagicMock()
-sys.modules['db'] = mock_db
-
 # Test that the health check returns 200 when the DynamoDB table is ACTIVE
 class TestHealthCheckSuccess:
     def test_health_check_active(self):
