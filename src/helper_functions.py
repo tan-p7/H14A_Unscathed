@@ -1,4 +1,5 @@
 import json
+from src.constants import JSON_TYPE
 
 def build_response(status_code, content_type, body):
     """Builds a JSON response object to be returned by the lambda handler using the provided status code, content-type, and body.
@@ -12,10 +13,19 @@ def build_response(status_code, content_type, body):
         Response: JSON object structure detailing the statusCode, Content-Type, and body
     """
 
-    return {
-        'statusCode': status_code,
-        'headers': {
-            'Content-Type': content_type
-        },
-        'body': json.dumps(body)
-    }
+    if content_type == JSON_TYPE:
+        return {
+            'statusCode': status_code,
+            'headers': {
+                'Content-Type': content_type
+            },
+            'body': json.dumps(body)
+        }
+    else:
+        return {
+            'statusCode': status_code,
+            'headers': {
+                'Content-Type': content_type
+            },
+            'body': body
+        }
