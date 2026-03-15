@@ -558,22 +558,28 @@ ORDER_DOC_3 = """<?xml version="1.0" encoding="UTF-8"?>
 
 # Sample JSON bodies for order documents to be passed into functions for testing
 order1 = {
-    "deliveredQuantity": "90",
-    "backorderQuantity": "10",
-    "backorderReason": "Out of stock",
-    "note": "Beeswax will be restocked on Friday"
-    "xml": ORDER_DOC_1
+    "body": {
+        "deliveredQuantity": "90",
+        "backorderQuantity": "10",
+        "backorderReason": "Out of stock",
+        "note": "Beeswax will be restocked on Friday"
+        "xml": ORDER_DOC_1
+    }
 }
 
 order2 = {
-    "deliveredQuantity": "100",
-    "xml": ORDER_DOC_2
+    "body": {
+        "deliveredQuantity": "100",
+        "xml": ORDER_DOC_2
+    }
 }
 
 order3 = {
-    "deliveredQuantity": "20",
-    "backorderQuantity": "80",
-    "backorderReason": "Suppliers lost their last crate of bananas",
-    "note": "Delivery will be significantly delayed"
-    "xml": ORDER_DOC_3
+    "body": {
+        "deliveredQuantity": "20",
+        "backorderQuantity": "80",
+        "backorderReason": "Suppliers lost their last crate of bananas",
+        "note": "Delivery will be significantly delayed"
+        "xml": ORDER_DOC_3
+    }
 }
