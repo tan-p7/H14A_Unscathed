@@ -16,7 +16,9 @@ class TestRetrieveAllDespatchAdvice:
             {"despatch_ubl": "<DespatchAdvice><ID>2</ID></DespatchAdvice>"}
         ]
 
-        combined_ubl = "<DespatchAdviceList>" + "".join([item["despatch_ubl"] for item in mock_response]) + "</DespatchAdviceList>"
+        combined_ubl = f"<DespatchAdviceList{self.NAMESPACES}>" + \
+                        "".join([item["despatch_ubl"] for item in mock_response]) + \
+                        "</DespatchAdviceList>"
 
         with patch("src.db.dynamodb_table") as mock_table:
             #Retrieve all despatch advice documents 
@@ -30,8 +32,10 @@ class TestRetrieveAllDespatchAdvice:
 
     def test_fails_to_retrieve_when_no_despatch_advice_exists(self):
         mock_response = []
-        combined_ubl = "<DespatchAdviceList>" + "".join([item["despatch_ubl"] for item in mock_response]) + "</DespatchAdviceList>"
-
+        combined_ubl = f"<DespatchAdviceList{self.NAMESPACES}>" + \
+                        "".join([item["despatch_ubl"] for item in mock_response]) + \
+                        "</DespatchAdviceList>"
+        
         with patch("src.db.dynamodb_table") as mock_table:
             mock_table.scan.return_value = {"Items": mock_response}
 
