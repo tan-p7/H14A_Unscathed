@@ -88,5 +88,5 @@ def healthCheck(event, context):
             response = build_response(503, JSON_TYPE, 'Table not ready')
     except ClientError as e:
         print('Error:', e)
-        response = build_response(400, JSON_TYPE, e.response['Error']['Message'])
+        response = build_response(503, JSON_TYPE, e.response['Error']['Message'])
     return response
