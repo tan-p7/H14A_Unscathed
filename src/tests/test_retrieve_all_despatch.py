@@ -6,8 +6,9 @@ from src.constants import XML_TYPE, JSON_TYPE
 
 # Import function to test
 from src.retrieve_all_despatch import retrieve_all_despatch_advice
-"""
+
 class TestRetrieveAllDespatchAdvice:
+"""
     # Test that an existing despatch advice is successfully retrieved 
     def test_successfully_retrieves_all_despatch_advice(self):
         #Simulate a response for multiple despatch advice documents
