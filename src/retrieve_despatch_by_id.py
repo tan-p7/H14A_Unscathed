@@ -7,7 +7,7 @@ from boto3.dynamodb.conditions import Key
 # Import helper function and constants to build the JSON response
 from src.helper_functions import build_response
 from src.constants import JSON_TYPE, XML_TYPE
-from src.db import dynamodb_table
+import src.db
 
 def get_despatch_advice_by_id(despatch_id):
     """ Retrieves the despatch advice with the corresponding despatch ID if the ID provided is valid.
@@ -21,7 +21,7 @@ def get_despatch_advice_by_id(despatch_id):
 
     try:
         # Try to retrieve the despatch advice using despatch_id
-        response = dynamodb_table.get_item(Key={'despatchId': despatch_id})
+        response = src.db.dynamodb_table.get_item(Key={'despatch_id': despatch_id})
 
         # Return error if despatch advice does not exist
         if 'Item' not in response:
@@ -32,4 +32,4 @@ def get_despatch_advice_by_id(despatch_id):
 
     except ClientError as e:
         print('Error:', e)
-        return build_response(400, JSON_TYPE, e.response['Error']['Message'])
+        return build_response(503, JSON_TYPE, e.response['Error']['Message'])
