@@ -1,14 +1,16 @@
 # Import required modules for the API
 import json
 import boto3
-from db import dynamodb_table
+import src.db
+#from src.db import dynamodb_table
 from botocore.exceptions import ClientError
 
 # Import functions and constants that perform the core data processing
-from helper_functions import build_response
-from constants import JSON_TYPE
-from delete_despatch import delete_despatch_advice
-from retrieve_despatch_by_id import get_despatch_advice_by_id
+from src.helper_functions import build_response
+from src.constants import JSON_TYPE
+from src.delete_despatch import delete_despatch_advice
+from src.retrieve_despatch_by_id import get_despatch_advice_by_id
+from src.retrieve_all_despatch import retrieve_all_despatch_advice
 
 # Initialise URL constants
 BASE_URL = '/api/despatch'
@@ -39,6 +41,10 @@ def lambda_handler(event, context):
         # Determine the API endpoint requested and call the appropriate function 
         if http_method == 'GET' and path == HEALTH_CHECK_PATH:
             return healthCheck(event, context)
+        
+        elif http_method == 'GET' and path == DESPATCH_ADVICE_PATH:
+            response = retrieve_all_despatch_advice()
+            
         elif http_method == 'GET' and path.startswith(DESPATCH_ADVICE_PATH) and pathParameters:
             despatch_id = event['pathParameters'].get('despatch-id')
 
@@ -61,7 +67,7 @@ def lambda_handler(event, context):
     # Handle any errors raised accordingly
     except Exception as e:
         print('Error:', e)
-        response = build_response(400, JSON_TYPE, 'Error processing request')
+        response = build_response(500, JSON_TYPE, 'Server error: Error processing request')
    
     return response
 
@@ -79,12 +85,12 @@ def healthCheck(event, context):
                   and body message.
     """
     try:
-      status = dynamodb_table.table_status
-      if status == 'ACTIVE':
-        response = build_response(200, JSON_TYPE, 'Service is operational')
-      else:
-        response = build_response(503, JSON_TYPE, 'Table not ready')
+        status = src.db.dynamodb_table.table_status
+        if status == 'ACTIVE':
+            response = build_response(200, JSON_TYPE, 'Service is operational')
+        else:
+            response = build_response(503, JSON_TYPE, 'Table not ready')
     except ClientError as e:
-      print('Error:', e)
-      response = build_response(503, JSON_TYPE, 'Error processing request')
+        print('Error:', e)
+        response = build_response(503, JSON_TYPE, e.response['Error']['Message'])
     return response
