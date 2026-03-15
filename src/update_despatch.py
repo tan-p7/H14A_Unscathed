@@ -1,0 +1,93 @@
+# Import required modules for the API
+import json
+import xml.etree.ElementTree as ET
+from botocore.exceptions import ClientError
+
+# Import helper function and constants to build the JSON response
+from src.helper_functions import build_response
+from src.constants import JSON_TYPE, XML_TYPE
+import src.db
+
+NS_CBC = 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2'
+NS_CAC = 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'
+
+def update_despatch_advice(despatch_id, body):
+    """ Retrieves the despatch advice with the corresponding despatch ID if the ID provided is valid and
+        and updates the despatch advice document.
+
+    Args:
+        despatch_id: str that indicates the corresponding ID of the despatch advice document to be retrieved
+        body: str that indicates the body of the request
+    
+    Returns: 
+        Response: JSON object structure detailing the statusCode, Content-Type, and body
+    """
+
+    try: 
+        body = json.loads(body)
+
+        delivered_quantity = body.get("deliveredQuantity")
+        backorder_quantity = body.get("backorderQuantity")
+        backorder_reason = body.get("backorderReason")
+        note = body.get("note")
+
+        # Validate the paramaters in the body of the request 
+        if delivered_quantity is not None and not isinstance(delivered_quantity, int):
+            return build_response(400, JSON_TYPE, "Delivered quantity must be a number.")
+
+        if backorder_quantity is not None and not isinstance(backorder_quantity, int):
+            return build_response(400, JSON_TYPE, "Backorder quantity must be a number.")
+
+        if backorder_reason is not None and not isinstance(backorder_reason, str):
+            return build_response(400, JSON_TYPE, "Backorder reason must be text.")
+
+        if note is not None and not isinstance(note, str):
+            return build_response(400, JSON_TYPE, "Note must be text.")
+
+        response = src.db.dynamodb_table.get_item(Key={'despatch_id': despatch_id})
+
+        if 'Item' not in response:
+            return build_response(404, JSON_TYPE, f'Despatch advice {despatch_id} not found')
+
+        xml_string = response['Item']['despatch_ubl']
+
+        root = ET.fromstring(xml_string)
+
+        if note:
+            note_el = root.find(f'{{{NS_CBC}}}Note')
+            if note_el is None:
+                note_el = ET.SubElement(root, f'{{{NS_CBC}}}Note')
+            note_el.text = note
+
+        for line in root.findall(f'.//{{{NS_CAC}}}DespatchLine'):
+
+            dq = line.find(f'{{{NS_CBC}}}DeliveredQuantity')
+            if dq is not None and delivered_quantity is not None:
+                dq.text = str(delivered_quantity)
+
+            if backorder_quantity is not None:
+                bq = line.find(f'{{{NS_CBC}}}BackorderQuantity')
+                if bq is None:
+                    bq = ET.SubElement(line, f'{{{NS_CBC}}}BackorderQuantity')
+                bq.text = str(backorder_quantity)
+
+            if backorder_reason:
+                br = line.find(f'{{{NS_CBC}}}BackorderReason')
+                if br is None:
+                    br = ET.SubElement(line, f'{{{NS_CBC}}}BackorderReason')
+                br.text = backorder_reason
+
+        updated_xml = ET.tostring(root, encoding="unicode")
+
+        src.db.dynamodb_table.update_item(
+            Key={'despatch_id': despatch_id},
+            UpdateExpression="SET despatch_ubl = :xml",
+            ExpressionAttributeValues={
+                ':xml': updated_xml
+            }
+        )
+
+        return build_response(200, XML_TYPE, updated_xml)
+    
+    except ClientError as e:
+        return build_response(400, JSON_TYPE, e.response['Error']['Message'])
