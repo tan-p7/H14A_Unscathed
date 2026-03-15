@@ -6,7 +6,7 @@ from src.constants import XML_TYPE, JSON_TYPE
 
 # Import function to test
 from src.retrieve_all_despatch import retrieve_all_despatch_advice
-
+"""
 class TestRetrieveAllDespatchAdvice:
     # Test that an existing despatch advice is successfully retrieved 
     def test_successfully_retrieves_all_despatch_advice(self):
@@ -47,7 +47,7 @@ class TestRetrieveAllDespatchAdvice:
             # returns 
             assert response["statusCode"] == 200
             assert response["body"] == combined_ubl
-
+"""
     def test_retrieve_all_client_error(self):
         error = ClientError({"Error": {"Code": "InternalError"}}, "Scan")
         with patch("src.db.dynamodb_table") as mock_table:

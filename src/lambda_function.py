@@ -41,8 +41,6 @@ def lambda_handler(event, context):
         
         # Determine the API endpoint requested and call the appropriate function 
         if http_method == 'GET' and path == HEALTH_CHECK_PATH:
-            return healthCheck()
-        
             return health_check(event, context)
         elif http_method == 'POST' and path == DESPATCH_ADVICE_PATH:
             return generate_despatch(event, context)
