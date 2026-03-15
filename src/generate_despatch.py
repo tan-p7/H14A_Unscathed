@@ -109,7 +109,6 @@ def generate_despatch(event, context):
         supplier_account_id = supplier_el.findtext(f'{{{NS_CBC}}}CustomerAssignedAccountID') if supplier_el is not None else ''
  
         # Delivery address 
-        # TODO: contract deets??
         delivery_el      = root.find(f'{{{NS_CAC}}}Delivery')
         delivery_addr_el = delivery_el.find(f'{{{NS_CAC}}}DeliveryAddress') if delivery_el is not None else None
         if delivery_addr_el is None and buyer_party_el is not None:
