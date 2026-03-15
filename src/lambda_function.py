@@ -2,7 +2,6 @@
 import json
 import boto3
 import src.db
-#from src.db import dynamodb_table
 from botocore.exceptions import ClientError
 
 # Import functions and constants that perform the core data processing
@@ -52,8 +51,8 @@ def lambda_handler(event, context):
             if not despatch_id or not despatch_id.isdigit():
                 response = build_response(404, JSON_TYPE, "Not Found")
             else:
-                despatch_id = int(despatch_id)
                 response = get_despatch_advice_by_id(despatch_id)
+
         elif http_method == 'DELETE' and path.startswith(DESPATCH_ADVICE_PATH) and pathParameters:
             despatch_id = event['pathParameters'].get('despatch-id')
 
@@ -61,8 +60,8 @@ def lambda_handler(event, context):
             if not despatch_id or not despatch_id.isdigit():
                 response = build_response(404, JSON_TYPE, "Not Found")
             else:
-                despatch_id = int(despatch_id)
                 response = delete_despatch_advice(despatch_id)
+
         else:
             response = build_response(404, JSON_TYPE, 'Not Found')
         

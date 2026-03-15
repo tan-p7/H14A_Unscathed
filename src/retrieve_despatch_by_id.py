@@ -13,7 +13,7 @@ def get_despatch_advice_by_id(despatch_id):
     """ Retrieves the despatch advice with the corresponding despatch ID if the ID provided is valid.
 
     Args:
-        despatch_id: int that indicates the corresponding ID of the despatch advice document to be retrieved
+        despatch_id: str that indicates the corresponding ID of the despatch advice document to be retrieved
     
     Returns: 
         Response: JSON object structure detailing the statusCode, Content-Type, and body

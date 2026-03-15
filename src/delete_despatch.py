@@ -14,7 +14,7 @@ def delete_despatch_advice(despatch_id):
     """ Deletes the despatch advice with the corresponding despatch ID if the ID provided is valid.
 
     Args:
-        despatch_id: int that indicates the corresponding ID of the despatch advice document to be deleted
+        despatch_id: str that indicates the corresponding ID of the despatch advice document to be deleted
     
     Returns: 
         Response: JSON object structure detailing the statusCode, Content-Type, and body
