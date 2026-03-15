@@ -1,15 +1,13 @@
 # Import required modules for the API
-import json
 import boto3
 from botocore.exceptions import ClientError
-from boto3.dynamodb.conditions import Key
 
 # Import helper function and constants to build the JSON response
 from src.helper_functions import build_response
 from src.constants import JSON_TYPE, XML_TYPE
 import src.db
 
-def get_despatch_advice_by_id(despatch_id):
+def retrieve_despatch(despatch_id):
     """ Retrieves the despatch advice with the corresponding despatch ID if the ID provided is valid.
 
     Args:

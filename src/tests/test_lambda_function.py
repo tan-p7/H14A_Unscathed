@@ -18,7 +18,7 @@ def make_event(method, path, path_params=None):
 
 
 class TestLambdaHealthCheckRoute:
-    @patch('src.lambda_function.healthCheck')
+    @patch('src.lambda_function.health_check')
     def test_get_health_check_routes_correctly(self, mock_health):
         mock_health.return_value = {'statusCode': 200}
         response = lambda_handler(make_event('GET', HEALTH_CHECK_PATH), {})

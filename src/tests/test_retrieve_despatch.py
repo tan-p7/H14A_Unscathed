@@ -4,7 +4,7 @@ from unittest.mock import patch
 from botocore.exceptions import ClientError
 
 # Import function to test
-from src.retrieve_despatch_by_id import get_despatch_advice_by_id
+from src.retrieve_despatch import retrieve_despatch
 
 class TestRetrieveDespatchAdviceById:
     # Test that an existing despatch advice is successfully retrieved
@@ -19,7 +19,7 @@ class TestRetrieveDespatchAdviceById:
         with patch("src.db.dynamodb_table") as mock_table:
             # Retrieve the despatch advice
             mock_table.get_item.return_value = mock_response
-            response = get_despatch_advice_by_id("123")
+            response = retrieve_despatch("123")
 
             # Ensure that the retrieve function was called once and works
             mock_table.get_item.assert_called_once_with(Key={"despatch_id": "123"})
@@ -38,7 +38,7 @@ class TestRetrieveDespatchAdviceById:
             mock_table.get_item.return_value = mock_response
 
             # Try to retrieve a non-existent despatch advice
-            response = get_despatch_advice_by_id("999")
+            response = retrieve_despatch("999")
             mock_table.get_item.assert_called_once_with(Key={"despatch_id": "999"})
 
             # Check that a 404 response was returned
@@ -62,7 +62,7 @@ class TestRetrieveDespatchAdviceById:
             mock_table.get_item.side_effect = error
 
             # Ensure that the retrieve function was called once and works
-            response = get_despatch_advice_by_id("123")
+            response = retrieve_despatch("123")
             mock_table.get_item.assert_called_once_with(Key={"despatch_id": "123"})
 
             # Check that it fails to retrieve when AWS throws a client error

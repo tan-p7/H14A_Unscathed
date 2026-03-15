@@ -16,7 +16,7 @@ def retrieve_all_despatch_advice():
     """ Retrieves all saved despatch advice documents. 
 
     Returns: 
-        Response: JSON object structure detailing the statusCode, Content-Type, and body
+        Response: XML detailing the statusCode, Content-Type, and body
     """
 
     try: 
