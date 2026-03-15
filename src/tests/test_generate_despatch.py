@@ -85,21 +85,21 @@ class TestValidDespatch:
     @patch('src.generate_despatch.xmlschema.XMLSchema')
     def test_returns_200(self, mock_schema, mock_db):
         mock_schema.return_value.validate.return_value = None  # skip real schema
-        response = generate_despatch(make_event(VALID_ORDER_XML), {})
+        response = generate_despatch(VALID_ORDER_XML)
         assert response['statusCode'] == 200
 
     @patch('src.generate_despatch.dynamodb_table')
     @patch('src.generate_despatch.xmlschema.XMLSchema')
     def test_returns_xml_content_type(self, mock_schema, mock_db):
         mock_schema.return_value.validate.return_value = None
-        response = generate_despatch(make_event(VALID_ORDER_XML), {})
+        response = generate_despatch(VALID_ORDER_XML)
         assert response['headers']['Content-Type'] == XML_TYPE
 
     @patch('src.generate_despatch.dynamodb_table')
     @patch('src.generate_despatch.xmlschema.XMLSchema')
     def test_body_is_valid_xml(self, mock_schema, mock_db):
         mock_schema.return_value.validate.return_value = None
-        response = generate_despatch(make_event(VALID_ORDER_XML), {})
+        response = generate_despatch(VALID_ORDER_XML)
         # should not raise
         root = parse_response_xml(response)
         assert root is not None
@@ -108,7 +108,7 @@ class TestValidDespatch:
     @patch('src.generate_despatch.xmlschema.XMLSchema')
     def test_order_reference_id_matches(self, mock_schema, mock_db):
         mock_schema.return_value.validate.return_value = None
-        response = generate_despatch(make_event(VALID_ORDER_XML), {})
+        response = generate_despatch(VALID_ORDER_XML)
         root = parse_response_xml(response)
         order_ref_id = root.findtext(
             f'.//{{{NS_CAC}}}OrderReference/{{{NS_CBC}}}ID'
@@ -119,7 +119,7 @@ class TestValidDespatch:
     @patch('src.generate_despatch.xmlschema.XMLSchema')
     def test_despatch_line_quantity(self, mock_schema, mock_db):
         mock_schema.return_value.validate.return_value = None
-        response = generate_despatch(make_event(VALID_ORDER_XML), {})
+        response = generate_despatch(VALID_ORDER_XML)
         root = parse_response_xml(response)
         qty = root.findtext(f'.//{{{NS_CBC}}}DeliveredQuantity')
         assert qty == '5'
@@ -128,7 +128,7 @@ class TestValidDespatch:
     @patch('src.generate_despatch.xmlschema.XMLSchema')
     def test_delivery_address_populated(self, mock_schema, mock_db):
         mock_schema.return_value.validate.return_value = None
-        response = generate_despatch(make_event(VALID_ORDER_XML), {})
+        response = generate_despatch(VALID_ORDER_XML)
         root = parse_response_xml(response)
         city = root.findtext(
             f'.//{{{NS_CAC}}}DeliveryAddress/{{{NS_CBC}}}CityName'
@@ -139,7 +139,7 @@ class TestValidDespatch:
     @patch('src.generate_despatch.xmlschema.XMLSchema')
     def test_delivery_dates_auto_generated(self, mock_schema, mock_db):
         mock_schema.return_value.validate.return_value = None
-        response = generate_despatch(make_event(VALID_ORDER_XML), {})
+        response = generate_despatch(VALID_ORDER_XML)
         root = parse_response_xml(response)
         start = root.findtext(f'.//{{{NS_CBC}}}StartDate')
         end = root.findtext(f'.//{{{NS_CBC}}}EndDate')
@@ -158,7 +158,7 @@ class TestValidDespatch:
                 <cac:Item><cbc:Name>Widget B</cbc:Name></cac:Item>
                </cac:OrderLine></Order>"""
         )
-        response = generate_despatch(make_event(multi_line_xml), {})
+        response = generate_despatch(multi_line_xml)
         root = parse_response_xml(response)
         lines = root.findall(
             f'.//{{{NS_CAC}}}DespatchLine'
@@ -171,11 +171,11 @@ class TestValidDespatch:
 class TestErrorCases:
 
     def test_invalid_xml_returns_400(self):
-        response = generate_despatch(make_event("this is not xml at all"), {})
+        response = generate_despatch("this is not xml at all")
         assert response['statusCode'] == 400
 
     def test_empty_body_returns_400(self):
-        response = generate_despatch(make_event(""), {})
+        response = generate_despatch("")
         assert response['statusCode'] == 400
 
     @patch('src.generate_despatch.xmlschema.XMLSchema')
@@ -184,11 +184,6 @@ class TestErrorCases:
         mock_schema.return_value.validate.side_effect = (
             xmlschema.XMLSchemaValidationError(mock_schema, "bad xml")
         )
-        response = generate_despatch(make_event(VALID_ORDER_XML), {})
+        response = generate_despatch(VALID_ORDER_XML)
         assert response['statusCode'] == 400
         assert 'Invalid Order XML' in json.loads(response['body'])
-
-    def test_missing_body_key_returns_400(self):
-        response = generate_despatch({}, {})  # no 'body' key
-        assert response['statusCode'] == 400
-
