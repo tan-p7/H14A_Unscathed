@@ -4,7 +4,7 @@ from unittest.mock import patch
 from botocore.exceptions import ClientError
 
 # Import function to test
-from src.delete_despatch import delete_despatch_advice
+from src.delete_despatch import delete_despatch
 
 class TestDeleteDespatchAdvice:
     # Test that an existing despatch advice is successfully deleted
@@ -19,7 +19,7 @@ class TestDeleteDespatchAdvice:
         with patch("src.db.dynamodb_table") as mock_table:
             # Delete the despatch advice
             mock_table.delete_item.return_value = mock_response
-            response = delete_despatch_advice("123")
+            response = delete_despatch("123")
 
             # Ensure that the delete function was called once and works
             mock_table.delete_item.assert_called_once_with(
@@ -38,7 +38,7 @@ class TestDeleteDespatchAdvice:
             mock_table.delete_item.return_value = mock_response
 
             # Try to delete a non-existent despatch advice
-            response = delete_despatch_advice("-100")
+            response = delete_despatch("-100")
             assert response["statusCode"] == 404
 
     # Test that the deleting the table returns 503 when AWS throws a ClientError
@@ -58,7 +58,7 @@ class TestDeleteDespatchAdvice:
             mock_table.delete_item.side_effect = error
 
             # Ensure that the delete function was called once and works
-            response = delete_despatch_advice("123")
+            response = delete_despatch("123")
             mock_table.delete_item.assert_called_once_with(
                 Key={"despatch_id": "123"},
                 ReturnValues="ALL_OLD"
