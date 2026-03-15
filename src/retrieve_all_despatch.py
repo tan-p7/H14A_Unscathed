@@ -3,9 +3,9 @@ import json
 from botocore.exceptions import ClientError
 
 # Import helper function and constants to build the JSON response
-from helper_functions import build_response
-from constants import JSON_TYPE, XML_TYPE
-from db import dynamodb_table
+from src.helper_functions import build_response
+from src.constants import JSON_TYPE, XML_TYPE
+from src.db import dynamodb_table
 
 # Namespaces 
 NS_UBL = 'urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2'
