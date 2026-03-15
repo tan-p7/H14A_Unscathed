@@ -9,6 +9,7 @@ from src.helper_functions import build_response
 from src.constants import JSON_TYPE
 from src.delete_despatch import delete_despatch
 from src.retrieve_despatch import retrieve_despatch
+from src.generate_despatch import generate_despatch
 
 # Initialise URL constants
 BASE_URL = '/api/despatch'
@@ -39,6 +40,8 @@ def lambda_handler(event, context):
         # Determine the API endpoint requested and call the appropriate function 
         if http_method == 'GET' and path == HEALTH_CHECK_PATH:
             return health_check(event, context)
+        elif http_method == 'POST' and path == DESPATCH_ADVICE_PATH:
+            return generate_despatch(event, context)
         elif http_method == 'GET' and path.startswith(DESPATCH_ADVICE_PATH) and pathParameters:
             despatch_id = event['pathParameters'].get('despatch-id')
 

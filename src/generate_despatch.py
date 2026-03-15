@@ -47,6 +47,56 @@ def append_address(parent, addr: dict):
         c = cac_add(parent, 'Country')
         cbc_add(c, 'IdentificationCode', addr['countryCode'])
 
+def _party_el_to_dict(party_el):
+    """
+    Convert a UBL Party XML element to a dict suitable for append_party.
+    Returns an empty dict if party_el is None.
+    """
+    if party_el is None:
+        return {}
+    addr_el = party_el.find(f'{{{NS_CAC}}}PostalAddress')
+    address = None
+    if addr_el is not None:
+        address = {
+            'streetName':       addr_el.findtext(f'{{{NS_CBC}}}StreetName') or None,
+            'buildingName':     addr_el.findtext(f'{{{NS_CBC}}}BuildingName') or None,
+            'buildingNumber':   addr_el.findtext(f'{{{NS_CBC}}}BuildingNumber') or None,
+            'cityName':         addr_el.findtext(f'{{{NS_CBC}}}CityName') or None,
+            'postalZone':       addr_el.findtext(f'{{{NS_CBC}}}PostalZone') or None,
+            'countrySubentity': addr_el.findtext(f'{{{NS_CBC}}}CountrySubentity') or None,
+            'addressLine':      addr_el.findtext(f'{{{NS_CAC}}}AddressLine/{{{NS_CBC}}}Line') or None,
+            'countryCode':      addr_el.findtext(f'{{{NS_CAC}}}Country/{{{NS_CBC}}}IdentificationCode') or None,
+        }
+    tax_el = party_el.find(f'{{{NS_CAC}}}PartyTaxScheme')
+    tax_scheme = None
+    if tax_el is not None:
+        ts_el = tax_el.find(f'{{{NS_CAC}}}TaxScheme')
+        tax_scheme = {
+            'registrationName': tax_el.findtext(f'{{{NS_CBC}}}RegistrationName') or None,
+            'companyID':        tax_el.findtext(f'{{{NS_CBC}}}CompanyID') or None,
+            'exemptionReason':  tax_el.findtext(f'{{{NS_CBC}}}ExemptionReason') or None,
+            'schemeID':         ts_el.findtext(f'{{{NS_CBC}}}ID') if ts_el is not None else 'VAT',
+            'taxTypeCode':      ts_el.findtext(f'{{{NS_CBC}}}TaxTypeCode') if ts_el is not None else 'VAT',
+        }
+    contact_el = party_el.find(f'{{{NS_CAC}}}Contact')
+    contact = None
+    if contact_el is not None:
+        contact = {
+            'name':      contact_el.findtext(f'{{{NS_CBC}}}Name') or None,
+            'telephone': contact_el.findtext(f'{{{NS_CBC}}}Telephone') or None,
+            'telefax':   contact_el.findtext(f'{{{NS_CBC}}}Telefax') or None,
+            'email':     contact_el.findtext(f'{{{NS_CBC}}}ElectronicMail') or None,
+        }
+    name_el = party_el.find(f'{{{NS_CAC}}}PartyName')
+    name = name_el.findtext(f'{{{NS_CBC}}}Name') if name_el is not None else None
+    return {
+        'name':     name,
+        'address':  address,
+        'taxScheme': tax_scheme,
+        'contact':  contact,
+    }
+
+
 def append_party(parent, party: dict):
     """
     Append a full UBL Party block to a parent element.
@@ -179,9 +229,9 @@ def generate_despatch(event, context):
         # -- <cac:DespatchSupplierParty> --
         # The supplier who is sending the goods
         dsp = cac_add(da, 'DespatchSupplierParty')
-       
-        cbc_add(dsp, 'CustomerAssignedAccountID', seller_supplier_party)
-        append_party(dsp, supplier_party_el)
+        if supplier_account_id:
+            cbc_add(dsp, 'CustomerAssignedAccountID', supplier_account_id)
+        append_party(dsp, _party_el_to_dict(supplier_party_el))
 
         # -- <cac:DeliveryCustomerParty> --
         # The customer who is receiving the goods
@@ -191,8 +241,7 @@ def generate_despatch(event, context):
 
         if buyer_supplier_account_id:
             cbc_add(dcp, 'SupplierAssignedAccountID', buyer_supplier_account_id)
-        if buyer_party_el is not None:
-            append_party(dcp, buyer_party_el)
+        append_party(dcp, _party_el_to_dict(buyer_party_el))
  
         # <cac:Shipment> — delivery address and delivery window
         shipment    = cac_add(da, 'Shipment')
