@@ -1,5 +1,4 @@
 # Import required modules for the API
-import json
 from botocore.exceptions import ClientError
 
 # Import helper function and constants to build the JSON response
@@ -15,7 +14,11 @@ NS_CAC = 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents
 def retrieve_all_despatch_advice():
     """ Retrieves all saved despatch advice documents.
 
+<<<<<<< HEAD
     Returns:
+=======
+    Returns: 
+>>>>>>> 19ed096f8ee6b2586077fc3c3a328e311603a313
         Response: dict with statusCode, headers, and body (XML)
     """
 
@@ -43,6 +46,5 @@ def retrieve_all_despatch_advice():
     except ClientError as e:
         print('Error:', e)
         response = build_response(503, JSON_TYPE, e.response['Error']['Message'])
-        
     return response
 

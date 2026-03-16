@@ -1,5 +1,4 @@
 # Import required modules for the API
-import boto3
 from botocore.exceptions import ClientError
 
 # Import helper function and constants to build the JSON response

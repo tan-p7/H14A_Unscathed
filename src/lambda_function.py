@@ -1,6 +1,5 @@
 # Import required modules for the API
 import json
-import boto3
 import src.db
 from botocore.exceptions import ClientError
 
@@ -11,6 +10,7 @@ from src.delete_despatch import delete_despatch
 from src.retrieve_despatch import retrieve_despatch
 from src.generate_despatch import generate_despatch
 from src.retrieve_all_despatch import retrieve_all_despatch_advice
+from src.update_despatch import update_despatch_advice
 
 # Initialise URL constants
 BASE_URL = '/api/despatch'
@@ -38,7 +38,7 @@ def lambda_handler(event, context):
         # Determine the API endpoint requested and call the appropriate function
         if http_method == 'GET' and path == HEALTH_CHECK_PATH:
             return health_check(event, context)
-        elif http_method == 'POST' and path.startswith(DESPATCH_ADVICE_PATH):
+        elif http_method == 'POST' and path == DESPATCH_ADVICE_PATH:
             body = event.get('body') or ''
             return generate_despatch(body)
         elif http_method == 'GET' and path == DESPATCH_ADVICE_PATH:
