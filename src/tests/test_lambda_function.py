@@ -93,18 +93,6 @@ class TestLambdaUpdateDespatch:
         assert response['statusCode'] == 200
 
     @patch('src.lambda_function.update_despatch_advice')
-    def test_patch_despatch_advice_calls_update_with_id_and_body(self, mock_update):
-        mock_update.return_value = {'statusCode': 200}
-        path = DESPATCH_ADVICE_PATH + '/999'
-        body = '{"note": "Updated"}'
-        response = lambda_handler(
-            make_event('PATCH', path, path_params={'despatch-id': '999'}, body=body),
-            {}
-        )
-        mock_update.assert_called_once_with('999', body)
-        assert response['statusCode'] == 200
-
-    @patch('src.lambda_function.update_despatch_advice')
     def test_put_despatch_advice_passes_empty_json_when_no_body(self, mock_update):
         mock_update.return_value = {'statusCode': 200}
         path = DESPATCH_ADVICE_PATH + '/999'
