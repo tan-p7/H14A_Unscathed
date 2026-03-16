@@ -1,5 +1,4 @@
 # Import required modules for the API
-import json
 from botocore.exceptions import ClientError
 
 # Import helper function and constants to build the JSON response
@@ -16,7 +15,7 @@ def retrieve_all_despatch_advice():
     """ Retrieves all saved despatch advice documents. 
 
     Returns: 
-        Response: XML detailing the statusCode, Content-Type, and body
+        Response: dict with statusCode, headers, and body (XML)
     """
 
     try: 
@@ -42,6 +41,6 @@ def retrieve_all_despatch_advice():
 
     except ClientError as e:
         print('Error:', e)
-        response = build_response(503, JSON_TYPE, 'Error processing request')
+        response = build_response(503, JSON_TYPE, e.response['Error']['Message'])
     return response
 

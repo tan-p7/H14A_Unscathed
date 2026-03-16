@@ -2,6 +2,7 @@
 import json
 import xml.etree.ElementTree as ET
 from botocore.exceptions import ClientError
+from json import JSONDecodeError
 
 # Import helper function and constants to build the JSON response
 from src.helper_functions import build_response
@@ -10,6 +11,12 @@ import src.db
 
 NS_CBC = 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2'
 NS_CAC = 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'
+
+
+def _is_numeric(value):
+    """Return True if value is int or float but not bool (since bool is a subclass of int)."""
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
 
 def update_despatch_advice(despatch_id, body):
     """ Retrieves the despatch advice with the corresponding despatch ID if the ID provided is valid and
@@ -20,7 +27,7 @@ def update_despatch_advice(despatch_id, body):
         body: str that indicates the body of the request
     
     Returns: 
-        Response: JSON object structure detailing the statusCode, Content-Type, and body
+        Response: Response dict with statusCode, Content-Type, and body (XML on success, JSON for errors)
     """
 
     try: 
@@ -31,11 +38,11 @@ def update_despatch_advice(despatch_id, body):
         backorder_reason = body.get("backorderReason")
         note = body.get("note")
 
-        # Validate the paramaters in the body of the request 
-        if delivered_quantity is not None and not isinstance(delivered_quantity, int):
+        # Validate the parameters in the body of the request
+        if delivered_quantity is not None and not _is_numeric(delivered_quantity):
             return build_response(400, JSON_TYPE, "Delivered quantity must be a number.")
 
-        if backorder_quantity is not None and not isinstance(backorder_quantity, int):
+        if backorder_quantity is not None and not _is_numeric(backorder_quantity):
             return build_response(400, JSON_TYPE, "Backorder quantity must be a number.")
 
         if backorder_reason is not None and not isinstance(backorder_reason, str):
@@ -51,7 +58,11 @@ def update_despatch_advice(despatch_id, body):
 
         xml_string = response['Item']['despatch_ubl']
 
-        root = ET.fromstring(xml_string)
+        try:
+            root = ET.fromstring(xml_string)
+        except ET.ParseError as e:
+            print('Error:', e)
+            return build_response(500, JSON_TYPE, 'Stored despatch document is invalid XML.')
 
         if note:
             note_el = root.find(f'{{{NS_CBC}}}Note')
@@ -88,6 +99,9 @@ def update_despatch_advice(despatch_id, body):
         )
 
         return build_response(200, XML_TYPE, updated_xml)
-    
+
+    except JSONDecodeError as e:
+        return build_response(400, JSON_TYPE, f"Invalid JSON in request body: {e}")
     except ClientError as e:
-        return build_response(400, JSON_TYPE, e.response['Error']['Message'])
+        print('Error:', e)
+        return build_response(503, JSON_TYPE, e.response['Error']['Message'])
