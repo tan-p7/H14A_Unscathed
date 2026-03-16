@@ -55,7 +55,7 @@ def lambda_handler(event, context):
             else:
                 # Pass through as string to match DynamoDB partition key type
                 response = retrieve_despatch(despatch_id)
-        elif http_method in ('PUT', 'PATCH') and path.startswith(DESPATCH_ADVICE_PATH) and path_parameters:
+        elif http_method == 'PUT' and path.startswith(DESPATCH_ADVICE_PATH) and path_parameters:
             despatch_id = event['pathParameters'].get('despatch-id')
             body = event.get('body') or '{}'
 
