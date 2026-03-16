@@ -7,7 +7,7 @@ from botocore.exceptions import ClientError
 
 from src.helper_functions import build_response
 from src.constants import JSON_TYPE, XML_TYPE
-from src.db import dynamodb_table
+import src.db
 
 ## NAMESPACES!!
 NS_CBC = 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2'
@@ -137,7 +137,6 @@ def append_party(parent, party: dict):
 
 def generate_despatch(order_xml_string):
     try:
-        order_xml_string = json.loads(order_xml_string)
         root = ET.fromstring(order_xml_string.encode())
 
         order_id = root.findtext(f'{{{NS_CBC}}}ID') or 'UNKNOWN'
@@ -279,7 +278,7 @@ def generate_despatch(order_xml_string):
         # Store in DynamoDB and return
         despatch_xml = ET.tostring(da, encoding='unicode')
         try:
-            dynamodb_table.put_item(
+            src.db.dynamodb_table.put_item(
                 Item={
                     'despatch_id': despatch_id,
                     'despatch_ubl': despatch_xml,
