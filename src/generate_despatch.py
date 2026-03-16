@@ -197,7 +197,6 @@ def generate_despatch(order_xml_string):
                 'sellersItemID':   item_el.findtext(f'.//{{{NS_CAC}}}SellersItemIdentification/{{{NS_CBC}}}ID') if item_el is not None else '',
             })
 
-        ## WHAT ARE WE DOING FOR ADDRESSES
         ## building our XML
         da = ET.Element(f'{{{NS_UBL}}}DespatchAdvice')
 

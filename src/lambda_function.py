@@ -41,11 +41,10 @@ def lambda_handler(event, context):
         
         # Determine the API endpoint requested and call the appropriate function 
         if http_method == 'GET' and path == HEALTH_CHECK_PATH:
-            return healthCheck()
+            return health_check()
         
-            return health_check(event, context)
         elif http_method == 'POST' and path == DESPATCH_ADVICE_PATH:
-            return generate_despatch(event, context)
+            return generate_despatch(event['body'])
         elif http_method == 'GET' and path == DESPATCH_ADVICE_PATH:
             response = retrieve_all_despatch_advice()
         elif http_method == 'GET' and path.startswith(DESPATCH_ADVICE_PATH) and path_parameters:
@@ -78,7 +77,7 @@ def lambda_handler(event, context):
 
 
 
-def health_check(event, context):
+def health_check():
     """Handles health check requests from API Gateway by verifying that the service and DynamoDB table are operational.
     Args:
         Event: JSON-formatted data structure sent by API Gateway that contains request
