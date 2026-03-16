@@ -20,7 +20,7 @@ DESPATCH_ADVICE_PATH = BASE_URL + '/despatch-advice'
 
 def lambda_handler(event, context):
     """Handles requests coming from API Gateway and calls the appropriate route to manage despatch advices stored in the DynamoDB table.
-    
+
     Args:
         Event: JSON-formatted data structure that triggers the Lambda function to run
         Context: Object that provides runtime information about the function
@@ -29,16 +29,13 @@ def lambda_handler(event, context):
         Response: Response dict with statusCode, headers, and body
     """
 
-    print('Request event: ', event)
-    response = None
-    
     try:
         # Get information relevant to the http request
         http_method = event.get('httpMethod')
         path = event.get('path')
-        path_parameters = event.get('pathParameters')
-        
-        # Determine the API endpoint requested and call the appropriate function 
+        path_parameters = event.get('pathParameters')        
+
+        # Determine the API endpoint requested and call the appropriate function
         if http_method == 'GET' and path == HEALTH_CHECK_PATH:
             return health_check(event, context)
         elif http_method == 'POST' and path == DESPATCH_ADVICE_PATH:
@@ -58,7 +55,7 @@ def lambda_handler(event, context):
         elif http_method == 'PUT' and path.startswith(DESPATCH_ADVICE_PATH) and path_parameters:
             despatch_id = event['pathParameters'].get('despatch-id')
             body = event.get('body') or '{}'
-
+ 
             if not despatch_id:
                 response = build_response(404, JSON_TYPE, "Not Found")
             else:
@@ -73,13 +70,13 @@ def lambda_handler(event, context):
                 # Pass through as string to match DynamoDB partition key type
                 response = delete_despatch(despatch_id)
         else:
-            response = build_response(404, JSON_TYPE, 'Not Found')
-        
+            response = build_response(404, JSON_TYPE, 'Not Found' )
+
     # Handle any errors raised accordingly
     except Exception as e:
         print('Error:', e)
         response = build_response(500, JSON_TYPE, 'Server error: Error processing request')
-   
+
     return response
 
 
@@ -95,6 +92,7 @@ def health_check(event, context):
         Response: JSON object structure containing the HTTP statusCode, Content-Type,
                   and body message.
     """
+
     try:
         status = src.db.dynamodb_table.table_status
         if status == 'ACTIVE':

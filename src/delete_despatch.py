@@ -12,8 +12,8 @@ def delete_despatch(despatch_id):
 
     Args:
         despatch_id: str that indicates the corresponding ID of the despatch advice document to be deleted
-    
-    Returns: 
+
+    Returns:
         Response: JSON object structure detailing the statusCode, Content-Type, and body
     """
 

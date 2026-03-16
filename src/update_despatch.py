@@ -15,22 +15,22 @@ NS_CAC = 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents
 
 def _is_numeric(value):
     """Return True if value is int or float but not bool (since bool is a subclass of int)."""
-    return isinstance(value, (int, float)) and not isinstance(value, bool)
+    return isinstance(value, (int, float)) and not isinstance(value, bool) 
 
 
 def update_despatch_advice(despatch_id, body):
     """ Retrieves the despatch advice with the corresponding despatch ID if the ID provided is valid and
-        and updates the despatch advice document.
+        and updates the despatch advice document. 
 
     Args:
         despatch_id: str that indicates the corresponding ID of the despatch advice document to be retrieved
-        body: str that indicates the body of the request
-    
-    Returns: 
+        body: str that indicates the body of the request    
+
+    Returns:
         Response: Response dict with statusCode, Content-Type, and body (XML on success, JSON for errors)
     """
 
-    try: 
+    try:
         body = json.loads(body)
 
         delivered_quantity = body.get("deliveredQuantity")
@@ -51,12 +51,12 @@ def update_despatch_advice(despatch_id, body):
         if note is not None and not isinstance(note, str):
             return build_response(400, JSON_TYPE, "Note must be text.")
 
-        response = src.db.dynamodb_table.get_item(Key={'despatch_id': despatch_id})
+        response = src.db.dynamodb_table.get_item(Key={'despatch_id': despatch_id}) 
 
         if 'Item' not in response:
             return build_response(404, JSON_TYPE, f'Despatch advice {despatch_id} not found')
 
-        xml_string = response['Item']['despatch_ubl']
+        xml_string = response['Item']['despatch_ubl'] 
 
         try:
             root = ET.fromstring(xml_string)
@@ -71,7 +71,6 @@ def update_despatch_advice(despatch_id, body):
             note_el.text = note
 
         for line in root.findall(f'.//{{{NS_CAC}}}DespatchLine'):
-
             dq = line.find(f'{{{NS_CBC}}}DeliveredQuantity')
             if dq is not None and delivered_quantity is not None:
                 dq.text = str(delivered_quantity)
@@ -102,6 +101,7 @@ def update_despatch_advice(despatch_id, body):
 
     except JSONDecodeError as e:
         return build_response(400, JSON_TYPE, f"Invalid JSON in request body: {e}")
+
     except ClientError as e:
         print('Error:', e)
         return build_response(503, JSON_TYPE, e.response['Error']['Message'])

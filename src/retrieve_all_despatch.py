@@ -12,21 +12,21 @@ NS_CBC = 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2'
 NS_CAC = 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'
 
 def retrieve_all_despatch_advice():
-    """ Retrieves all saved despatch advice documents. 
+    """ Retrieves all saved despatch advice documents.
 
-    Returns: 
+    Returns:
         Response: dict with statusCode, headers, and body (XML)
     """
 
-    try: 
+    try:
         # Scan all stored despatch advice documents
-        response = src.db.dynamodb_table.scan()
+        response = src.db.dynamodb_table.scan() 
 
         # Get the items from the response
         items = response.get('Items', [])
 
         # Extract the stored documents
-        despatch_documents = [item['despatch_ubl'] for item in items]
+        despatch_documents = [item['despatch_ubl'] for item in items] 
 
         # Wrap them in a single UBL container
         all_despatches = (

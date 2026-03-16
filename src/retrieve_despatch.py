@@ -10,9 +10,9 @@ def retrieve_despatch(despatch_id):
     """ Retrieves the despatch advice with the corresponding despatch ID if the ID provided is valid.
 
     Args:
-        despatch_id: str that indicates the corresponding ID of the despatch advice document to be retrieved
-    
-    Returns: 
+        despatch_id: str that indicates the corresponding ID of the despatch advice document to be retrieved    
+
+    Returns:
         Response: JSON object structure detailing the statusCode, Content-Type, and body
     """
 
@@ -25,7 +25,7 @@ def retrieve_despatch(despatch_id):
             return build_response(404, JSON_TYPE, f'Despatch advice {despatch_id} not found')
 
         # Else return the despatch advice document
-        return build_response(200, XML_TYPE, response['Item']['despatch_ubl'])
+        return build_response(200, XML_TYPE, response['Item']['despatch_ubl']) 
 
     except ClientError as e:
         print('Error:', e)
