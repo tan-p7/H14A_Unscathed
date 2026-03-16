@@ -76,12 +76,10 @@ def parse_response_xml(response):
     return ET.fromstring(body.encode() if isinstance(body, str) else body)
 
 
-def get_despatch_id_from_response(response):
+def get_despatch_id(response):
     root = parse_response_xml(response)
     ids = root.findall(f'{{{NS_CBC}}}ID')
     return ids[0].text
-
-
 
 
 class TestHealthCheck:
@@ -93,38 +91,25 @@ class TestHealthCheck:
 
 class TestGenerateDespatch:
     def test_successfully_generates_despatch(self):
-        event = make_lambda_event(
-            "POST",
-            "/api/despatch/despatch-advice",
-            body=VALID_ORDER_XML
-        )
+        event = make_lambda_event("POST", "/api/despatch/despatch-advice", body=VALID_ORDER_XML)
         response = lambda_handler(event, {})
 
         assert response["statusCode"] == 200
-
         root = parse_response_xml(response)
         assert root is not None
 
-        despatch_id = get_despatch_id_from_response(response)
+        despatch_id = get_despatch_id(response)
         assert despatch_id is not None
         assert len(despatch_id) == 9
         assert despatch_id.isdigit()
 
     def test_fails_with_invalid_xml(self):
-        event = make_lambda_event(
-            "POST",
-            "/api/despatch/despatch-advice",
-            body="this is not xml"
-        )
+        event = make_lambda_event("POST","/api/despatch/despatch-advice", body="not xml")
         response = lambda_handler(event, {})
         assert response["statusCode"] == 400
 
     def test_fails_with_empty_body(self):
-        event = make_lambda_event(
-            "POST",
-            "/api/despatch/despatch-advice",
-            body=None
-        )
+        event = make_lambda_event("POST","/api/despatch/despatch-advice",body=None)
         response = lambda_handler(event, {})
         assert response["statusCode"] == 400
 
@@ -138,13 +123,10 @@ class TestRetrieveAllDespatch:
 
 class TestRetrieveDespatch:
     def test_successfully_retrieves_despatch(self):
-        create_response = lambda_handler(make_lambda_event(
-            "POST",
-            "/api/despatch/despatch-advice",
-            body=VALID_ORDER_XML
-        ), {})
+        create_response = lambda_handler(make_lambda_event("POST", "/api/despatch/despatch-advice", body=VALID_ORDER_XML), {})
+        print("BODY:", create_response["body"])  ####### WHYYYYYYYYYY
         assert create_response["statusCode"] == 200
-        despatch_id = get_despatch_id_from_response(create_response)
+        despatch_id = get_despatch_id(create_response)
 
         response = lambda_handler(make_lambda_event(
             "GET",
@@ -159,45 +141,40 @@ class TestRetrieveDespatch:
         returned_id = root.findall(f'{{{NS_CBC}}}ID')[0].text
         assert returned_id == despatch_id
 
-    def test_returns_404_for_nonexistent_despatch(self):
-        response = lambda_handler(make_lambda_event(
-            "GET",
-            "/api/despatch/despatch-advice/nonexistent-999",
-            path_parameters={"despatch-id": "nonexistent-999"}
-        ), {})
-        assert response["statusCode"] == 404
+
+class TestUpdateDespatch:
+    def test_successfully_updates_delivered_quantity(self):
+        create_response = lambda_handler(make_lambda_event("POST", "/api/despatch/despatch-advice", body=VALID_ORDER_XML), {})
+        assert create_response["statusCode"] == 200
+        despatch_id = get_despatch_id(create_response)
+        body = json.dumps({"deliveredQuantity": 10})
+        response = lambda_handler(make_lambda_event("PUT", f"/api/despatch/despatch-advice/{despatch_id}", body=body,
+                                                    path_parameters={"despatch-id": despatch_id}), {})
+        assert response["statusCode"] == 200
+        assert response["headers"]["Content-Type"] == "application/xml"
+        root = parse_response_xml(response)
+        dq = root.find(f".//{{{NS_CAC}}}DespatchLine/{{{NS_CBC}}}DeliveredQuantity")
+        assert dq is not None
+        assert dq.text == "10"
 
 
 class TestDeleteDespatch:
     def test_successfully_deletes_despatch(self):
-        create_response = lambda_handler(make_lambda_event(
-            "POST",
-            "/api/despatch/despatch-advice",
-            body=VALID_ORDER_XML
-        ), {})
+        create_response = lambda_handler(make_lambda_event("POST", "/api/despatch/despatch-advice", body=VALID_ORDER_XML), {})
         assert create_response["statusCode"] == 200
-        despatch_id = get_despatch_id_from_response(create_response)
+        despatch_id = get_despatch_id(create_response)
 
-        delete_response = lambda_handler(make_lambda_event(
-            "DELETE",
-            f"/api/despatch/despatch-advice/{despatch_id}",
-            path_parameters={"despatch-id": despatch_id}
-        ), {})
+        delete_response = lambda_handler(make_lambda_event("DELETE",f"/api/despatch/despatch-advice/{despatch_id}",
+                                                           path_parameters={"despatch-id": despatch_id}), {})
         assert delete_response["statusCode"] == 204
 
-        retrieve_response = lambda_handler(make_lambda_event(
-            "GET",
-            f"/api/despatch/despatch-advice/{despatch_id}",
-            path_parameters={"despatch-id": despatch_id}
-        ), {})
+        retrieve_response = lambda_handler(make_lambda_event("GET", f"/api/despatch/despatch-advice/{despatch_id}",
+                                                             path_parameters={"despatch-id": despatch_id}), {})
         assert retrieve_response["statusCode"] == 404
 
     def test_fails_to_delete_nonexistent_despatch(self):
-        response = lambda_handler(make_lambda_event(
-            "DELETE",
-            "/api/despatch/despatch-advice/nonexistent-999",
-            path_parameters={"despatch-id": "nonexistent-999"}
-        ), {})
+        response = lambda_handler(make_lambda_event("DELETE", "/api/despatch/despatch-advice/nonexistent",
+                                                    path_parameters={"despatch-id": "nonexistent"}), {})
         assert response["statusCode"] == 404
 
 
