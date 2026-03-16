@@ -13,14 +13,14 @@ def delete_despatch(despatch_id):
 
     Args:
         despatch_id: str that indicates the corresponding ID of the despatch advice document to be deleted
-    
-    Returns: 
+
+    Returns:
         Response: JSON object structure detailing the statusCode, Content-Type, and body
     """
 
     try:
-        # Try delete the despatch advice using despatch_id
-        response = src.db.dynamodb_table.delete_item(
+        # Try to delete the despatch advice using despatch_id
+        response = dynamodb_table.delete_item(
             Key={'despatch_id': despatch_id},
             ReturnValues='ALL_OLD'
         )
