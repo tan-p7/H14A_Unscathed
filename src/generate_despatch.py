@@ -4,15 +4,21 @@ import xmlschema
 import uuid
 from datetime import datetime, timedelta
 from botocore.exceptions import ClientError
+import boto3
 
 from src.helper_functions import build_response
 from src.constants import JSON_TYPE, XML_TYPE
 import src.db
 
+## s3 client definition
+s3_client = boto3.client("s3", region_name='us-east-1');
+
 ## NAMESPACES!!
 NS_CBC = 'urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2'
 NS_CAC = 'urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2'
 NS_UBL = 'urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2'
+BUCKET_NAME = 'xml-storage-bucket'
+
 
 
 def cbc_add(parent, tag, text, attribs=None):
@@ -192,7 +198,6 @@ def generate_despatch(order_xml_string):
                 'sellersItemID':   item_el.findtext(f'.//{{{NS_CAC}}}SellersItemIdentification/{{{NS_CBC}}}ID') if item_el is not None else '',
             })
 
-        ## WHAT ARE WE DOING FOR ADDRESSES
         ## building our XML
         da = ET.Element(f'{{{NS_UBL}}}DespatchAdvice') 
 
@@ -275,13 +280,17 @@ def generate_despatch(order_xml_string):
                 sid = cac_add(item, 'SellersItemIdentification')
                 cbc_add(sid, 'ID', line['sellersItemID'])
 
+        despatch_xml_bytes = ET.tostring(da, encoding='utf-8', xml_declaration=True)
+        
         # Store in DynamoDB and return
         despatch_xml = ET.tostring(da, encoding='unicode')
         try:
+            s3_client.put_object(BUCKET_NAME, f"dispatches/{despatch_id}.xml", despatch_xml_bytes, 'application/xml')
+
             src.db.dynamodb_table.put_item(
-                Item={
+                {
                     'despatch_id': despatch_id,
-                    'despatch_ubl': despatch_xml,
+                    ## 'user_id': 'blahblah'
                 }
             )
 
