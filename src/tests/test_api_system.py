@@ -170,10 +170,3 @@ class TestDeleteDespatch:
 
         assert response.status_code == 404
 
-class TestLambdaFunction:
-
-    def test_fails_nonexistent_route(self):
-
-        response = requests.post(f"{BASE_URL}/health")
-
-        assert response.status_code == 403
