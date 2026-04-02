@@ -83,64 +83,29 @@ class TestValidDespatch:
 
     @patch('src.db.dynamodb_table')
     @patch('src.generate_despatch.xmlschema.XMLSchema')
-    def test_returns_200(self, mock_schema, mock_db):
+    def test_successfully_generates_despatch_advice(self, mock_schema, mock_db):
         mock_schema.return_value.validate.return_value = None  # skip real schema
         response = generate_despatch(VALID_ORDER_XML)
         assert response['statusCode'] == 200
-
-    @patch('src.db.dynamodb_table')
-    @patch('src.generate_despatch.xmlschema.XMLSchema')
-    def test_returns_xml_content_type(self, mock_schema, mock_db):
-        mock_schema.return_value.validate.return_value = None
-        response = generate_despatch(VALID_ORDER_XML)
         assert response['headers']['Content-Type'] == XML_TYPE
 
-    @patch('src.db.dynamodb_table')
-    @patch('src.generate_despatch.xmlschema.XMLSchema')
-    def test_body_is_valid_xml(self, mock_schema, mock_db):
-        mock_schema.return_value.validate.return_value = None
-        response = generate_despatch(VALID_ORDER_XML)
         # should not raise
         root = parse_response_xml(response)
         assert root is not None
 
-    @patch('src.db.dynamodb_table')
-    @patch('src.generate_despatch.xmlschema.XMLSchema')
-    def test_order_reference_id_matches(self, mock_schema, mock_db):
-        mock_schema.return_value.validate.return_value = None
-        response = generate_despatch(VALID_ORDER_XML)
-        root = parse_response_xml(response)
         order_ref_id = root.findtext(
             f'.//{{{NS_CAC}}}OrderReference/{{{NS_CBC}}}ID'
         )
         assert order_ref_id == 'ORD-001'
 
-    @patch('src.db.dynamodb_table')
-    @patch('src.generate_despatch.xmlschema.XMLSchema')
-    def test_despatch_line_quantity(self, mock_schema, mock_db):
-        mock_schema.return_value.validate.return_value = None
-        response = generate_despatch(VALID_ORDER_XML)
-        root = parse_response_xml(response)
         qty = root.findtext(f'.//{{{NS_CBC}}}DeliveredQuantity')
         assert qty == '5'
 
-    @patch('src.db.dynamodb_table')
-    @patch('src.generate_despatch.xmlschema.XMLSchema')
-    def test_delivery_address_populated(self, mock_schema, mock_db):
-        mock_schema.return_value.validate.return_value = None
-        response = generate_despatch(VALID_ORDER_XML)
-        root = parse_response_xml(response)
         city = root.findtext(
             f'.//{{{NS_CAC}}}DeliveryAddress/{{{NS_CBC}}}CityName'
         )
         assert city == 'Melbourne'
 
-    @patch('src.db.dynamodb_table')
-    @patch('src.generate_despatch.xmlschema.XMLSchema')
-    def test_delivery_dates_auto_generated(self, mock_schema, mock_db):
-        mock_schema.return_value.validate.return_value = None
-        response = generate_despatch(VALID_ORDER_XML)
-        root = parse_response_xml(response)
         start = root.findtext(f'.//{{{NS_CBC}}}StartDate')
         end = root.findtext(f'.//{{{NS_CBC}}}EndDate')
         assert start is not None
