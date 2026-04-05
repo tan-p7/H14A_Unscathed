@@ -1,5 +1,4 @@
 # Import required modules for the API
-import json
 import src.db
 from botocore.exceptions import ClientError
 
@@ -11,11 +10,30 @@ from src.retrieve_despatch import retrieve_despatch
 from src.generate_despatch import generate_despatch
 from src.retrieve_all_despatch import retrieve_all_despatch_advice
 from src.update_despatch import update_despatch_advice
+from src.auth_service import register, login, logout
+from src.auth_dependencies import get_auth_context
 
 # Initialise URL constants
 BASE_URL = '/api/despatch'
 HEALTH_CHECK_PATH = BASE_URL + '/health'
 DESPATCH_ADVICE_PATH = BASE_URL + '/despatch-advice'
+
+AUTH_BASE = '/api/auth'
+AUTH_REGISTER_PATH = AUTH_BASE + '/register'
+AUTH_LOGIN_PATH = AUTH_BASE + '/login'
+AUTH_LOGOUT_PATH = AUTH_BASE + '/logout'
+
+
+def _auth_error_response(message: str):
+    return build_response(401, JSON_TYPE, {"message": message})
+
+
+def _require_auth(event):
+    """Returns None if OK, else a Lambda response dict."""
+    claims, err = get_auth_context(event)
+    if err:
+        return _auth_error_response(err)
+    return None
 
 
 def lambda_handler(event, context):
@@ -35,42 +53,74 @@ def lambda_handler(event, context):
         path = event.get('path')
         path_parameters = event.get('pathParameters')        
 
+        # CORS preflight (browser SPA)
+        if http_method == 'OPTIONS' and (
+            path.startswith(AUTH_BASE) or path.startswith(BASE_URL)
+        ):
+            return build_response(204, JSON_TYPE, "")
+
+        # Auth routes (public)
+        if http_method == 'POST' and path == AUTH_REGISTER_PATH:
+            return register(event)
+        if http_method == 'POST' and path == AUTH_LOGIN_PATH:
+            return login(event)
+        if http_method == 'POST' and path == AUTH_LOGOUT_PATH:
+            return logout(event)
+
         # Determine the API endpoint requested and call the appropriate function
         if http_method == 'GET' and path == HEALTH_CHECK_PATH:
             return health_check(event, context)
         elif http_method == 'POST' and path == DESPATCH_ADVICE_PATH:
-            body = event.get('body') or ''
-            return generate_despatch(body)
+            blocked = _require_auth(event)
+            if blocked:
+                response = blocked
+            else:
+                body = event.get('body') or ''
+                response = generate_despatch(body)
         elif http_method == 'GET' and path == DESPATCH_ADVICE_PATH:
-            response = retrieve_all_despatch_advice()
+            blocked = _require_auth(event)
+            if blocked:
+                response = blocked
+            else:
+                response = retrieve_all_despatch_advice()
         elif http_method == 'GET' and path.startswith(DESPATCH_ADVICE_PATH) and path_parameters:
-            despatch_id = event['pathParameters'].get('despatch-id')
-
-            # Validate despatch_id is provided and non-empty
-            if not despatch_id:
-                response = build_response(404, JSON_TYPE, "Not Found")
+            blocked = _require_auth(event)
+            if blocked:
+                response = blocked
             else:
-                # Pass through as string to match DynamoDB partition key type
-                response = retrieve_despatch(despatch_id)
+                despatch_id = event['pathParameters'].get('despatch-id')
+
+                # Validate despatch_id is provided and non-empty
+                if not despatch_id:
+                    response = build_response(404, JSON_TYPE, "Not Found")
+                else:
+                    # Pass through as string to match DynamoDB partition key type
+                    response = retrieve_despatch(despatch_id)
         elif http_method == 'PUT' and path.startswith(DESPATCH_ADVICE_PATH) and path_parameters:
-            despatch_id = event['pathParameters'].get('despatch-id')
-            body = event.get('body') or '{}'
- 
-            if not despatch_id:
-                response = build_response(404, JSON_TYPE, "Not Found")
+            blocked = _require_auth(event)
+            if blocked:
+                response = blocked
             else:
-                response = update_despatch_advice(despatch_id, body)
-        elif http_method == 'DELETE' and path.startswith(DESPATCH_ADVICE_PATH) and path_parameters:
-            despatch_id = event['pathParameters'].get('despatch-id')
+                despatch_id = event['pathParameters'].get('despatch-id')
+                body = event.get('body') or '{}'
 
-            # Validate despatch_id is provided and non-empty
-            if not despatch_id:
-                response = build_response(404, JSON_TYPE, "Not Found")
+                if not despatch_id:
+                    response = build_response(404, JSON_TYPE, "Not Found")
+                else:
+                    response = update_despatch_advice(despatch_id, body)
+        elif http_method == 'DELETE' and path.startswith(DESPATCH_ADVICE_PATH) and path_parameters:
+            blocked = _require_auth(event)
+            if blocked:
+                response = blocked
             else:
-                # Pass through as string to match DynamoDB partition key type
-                response = delete_despatch(despatch_id)
+                despatch_id = event['pathParameters'].get('despatch-id')
+
+                if not despatch_id:
+                    response = build_response(404, JSON_TYPE, "Not Found")
+                else:
+                    response = delete_despatch(despatch_id)
         else:
-            response = build_response(404, JSON_TYPE, 'Not Found' )
+            response = build_response(404, JSON_TYPE, 'Not Found')
 
     # Handle any errors raised accordingly
     except Exception as e:
