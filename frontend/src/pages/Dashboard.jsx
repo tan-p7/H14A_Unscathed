@@ -1,5 +1,11 @@
+import Layout from '../components/layout'
+
 function Dashboard() {
-  return <div>Dashboard page</div>
+  return (
+    <Layout>
+      <h1>Dashboard</h1>
+    </Layout>
+  )
 }
 
 export default Dashboard
