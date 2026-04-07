@@ -3,8 +3,8 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL
 export async function generateDespatch(orderXml) {
   const res = await fetch(`${BASE_URL}/despatch-advice`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/xml' },
-    body: orderXml,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(orderXml),
   })
   return res
 }
