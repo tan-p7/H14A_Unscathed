@@ -1,0 +1,592 @@
+openapi: 3.0.4
+info:
+  version: "1.0.0"
+  title: Despatch Advice Processing API
+  description: |-
+    This is a SaaS cloud model API that can be used to process and manage Despatch Advice business documents. The service accepts UBL-standard Order and Despatch Advice documents to generate, retrieve, update, and delete Despatch Advice documents.
+servers:
+  - description: Despatch Advice Processing API Servers
+    url: https://virtserver.swaggerhub.com/unsw-7ef/despatch-advices/1.0.0
+tags:
+  - name: Paths
+  - name: Auth
+paths:
+  /api/auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register a user
+      description: Create a new user account. Stores a bcrypt password hash in DynamoDB.
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        '409':
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+
+  /api/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login
+      description: Authenticate a user and return an access token (JWT).
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+
+  /api/auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Logout
+      description: |-
+        Logout the current session. Requires a Bearer token.
+        If a revocations table is configured, the token jti is recorded until expiry.
+      operationId: logoutUser
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Logged out
+        '401':
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+
+  /api/despatch/health:
+    get:
+      tags:
+        - Paths
+      summary: Check the aliveness of the service
+      description: Check whether the state of the server is operational.
+      operationId: checkHealth
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthSuccess'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+  /api/despatch/despatch-advice:
+    post:
+      tags:
+        - Paths
+      summary: Generate a despatch advice document
+      description: Generate a despatch advice document using an order document and user-provided inputs.
+      operationId: generateDespatch
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerationInput'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/DespatchDoc'
+        '401':
+          description: Unauthorized - missing or invalid Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        '400':
+          description: Bad Request - Multiple possible causes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+              examples:
+                MissingRequiredField:
+                  value:
+                    message: "Missing required field"
+                InvalidElementType:
+                  value:
+                    message: "Invalid element type provided"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    get:
+      tags:
+        - Paths
+      summary: Retrieve all despatch advice documents
+      description: Retrieve all despatch advice documents stored in the database.
+      operationId: retrieveAllDespatches
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/DespatchDoc'
+        '401':
+          description: Unauthorized - missing or invalid Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+  /api/despatch/despatch-advice/{despatch-id}:
+    get:
+      tags:
+        - Paths
+      summary: Retrieve a despatch advice document
+      description: Given a despatch advice ID, retrieve the corresponding despatch advice document stored in the database.
+      operationId: retrieveDespatchById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: despatch-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 565899
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/DespatchDoc'
+        '401':
+          description: Unauthorized - missing or invalid Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        '400':
+          description: Despatch advice not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+              examples:
+                DespatchAdviceNotFound:
+                  value:
+                    message: "Despatch advice 1 not found"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    put:
+      tags:
+        - Paths
+      summary: Update a despatch advice document
+      description: Given a despatch advice ID, update the corresponding despatch advice document stored in the database.
+      operationId: updateDespatchById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: despatch-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 565899
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFields'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/DespatchDoc'
+        '401':
+          description: Unauthorized - missing or invalid Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        '400':
+          description: Despatch advice not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+              examples:
+                DespatchAdviceNotFound:
+                  value:
+                    message: "Despatch advice 1 not found"
+                InvalidElementType:
+                  value:
+                    message: "Invalid element type provided"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    delete:
+      tags:
+        - Paths
+      summary: Delete a despatch advice document
+      description: Given a despatch advice ID, delete the corresponding despatch advice document stored in the database.
+      operationId: deleteDespatchById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: despatch-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 565899
+      responses:
+        '204':
+          description: Content deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessfulDeletion'
+        '401':
+          description: Unauthorized - missing or invalid Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        '400':
+          description: Despatch advice not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+              examples:
+                DespatchAdviceNotFound:
+                  value:
+                    message: "Despatch advice 1 not found"
+                InvalidElementType:
+                  value:
+                    message: "Invalid element type provided"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    HealthSuccess:
+      type: string
+      example: Service is operational
+    ServerError:
+      type: string
+      example: Error processing request
+    SuccessfulDeletion:
+      type: string
+      example: Despatch Advice 1 was deleted successfully.  
+    GenericError:
+      type: object
+      properties:
+        message:
+          type: string
+          description: A human-readable message describing the error
+      required:
+        - message
+    GenerationInput:
+      type: object
+      properties:
+        deliveredQuantity:
+          type: integer
+          example: 90
+        backorderQuantity:
+          type: integer
+          example: 10
+        backorderReason:
+          type: string
+          example: Out of stock
+        note:
+          type: string
+          example: Beeswax will be restocked on Friday
+        xml:
+          $ref: '#/components/schemas/OrderDoc'
+    UpdateFields:
+      properties:
+        deliveredQuantity:
+          type: integer
+          example: 90
+        backorderQuantity:
+          type: integer
+          example: 10
+        backorderReason:
+          type: string
+          example: Out of stock
+        note:
+          type: string
+          example: Beeswax will be restocked on Friday
+    OrderDoc:
+      type: object
+      xml:
+        name: Order
+      properties:
+        xmlns:
+          type: string
+          example: urn:oasis:names:specification:ubl:schema:xsd:Order-2
+          xml:
+            attribute: true # Renders 'id' as an XML attribute
+        ID:
+          type: integer
+          example: 565899
+        IssueDate:
+          type: string
+          format: date
+          example: 2025-03-03
+        IssueTime:
+          type: string
+          format: date-time
+          example: 12:00:00
+        Note:
+          type: string
+          example: Sample order
+        orderReference:
+          $ref: '#/components/schemas/OrderReference'
+        despatchSupplierParty:
+          $ref: '#/components/schemas/PartyContainer'
+        deliveryCustomerParty:
+          $ref: '#/components/schemas/PartyContainer'
+        shipment:
+          $ref: '#/components/schemas/Shipment'
+    DespatchDoc:
+      type: object
+      xml:
+        name: DespatchAdvice
+      properties:
+        xmlns:
+          type: string
+          example: urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2
+          xml:
+            attribute: true # Renders 'id' as an XML attribute
+        ID:
+          type: integer
+          example: 565899
+        IssueDate:
+          type: string
+          format: date
+          example: 2025-03-03
+        IssueTime:
+          type: string
+          format: date-time
+          example: 12:00:00
+        Note:
+          type: string
+          example: Sample despatch advice
+        orderReference:
+          $ref: '#/components/schemas/OrderReference'
+        despatchSupplierParty:
+          $ref: '#/components/schemas/PartyContainer'
+        deliveryCustomerParty:
+          $ref: '#/components/schemas/PartyContainer'
+        shipment:
+          $ref: '#/components/schemas/Shipment'
+    OrderReference:
+      type: object
+      properties:
+        id:
+          type: string
+          example: AEG012345
+    PartyContainer:
+      type: object
+      properties:
+        party:
+          $ref: '#/components/schemas/Party'
+    Party:
+      type: object
+      properties:
+        endpointId:
+          type: object
+          properties:
+            value:
+              type: string
+              example: "9429033821733"
+            schemeId:
+              type: string
+              example: "0088"
+        partyName:
+          type: object
+          properties:
+            name:
+              type: string
+              example: Consortial
+    Shipment:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "1"
+        delivery:
+          $ref: '#/components/schemas/Delivery'
+    Delivery:
+      type: object
+      properties:
+        deliveryAddress:
+          $ref: '#/components/schemas/Address'
+    Address:
+      type: object
+      properties:
+        streetName:
+          type: string
+          example: Avon Way
+        cityName:
+          type: string
+          example: Bridgtow
+        postalZone:
+          type: string
+          example: ZZ99 1ZZ
+        countrySubentity:
+          type: string
+          example: Avon
+        country:
+          type: object
+          properties:
+            identificationCode:
+              type: string
+              example: GB
+
+    RegisterRequest:
+      type: object
+      required: [email, password, name]
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          minLength: 8
+          example: correct horse battery staple
+        name:
+          type: string
+          example: Jane Doe
+
+    RegisterResponse:
+      type: object
+      required: [userId, email, name]
+      properties:
+        userId:
+          type: string
+          example: 550e8400-e29b-41d4-a716-446655440000
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        name:
+          type: string
+          example: Jane Doe
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          example: correct horse battery staple
+
+    LoginResponse:
+      type: object
+      required: [accessToken, tokenType, expiresIn]
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token
+        tokenType:
+          type: string
+          example: Bearer
+        expiresIn:
+          type: integer
+          description: Token TTL in seconds
+          example: 3600
