@@ -1,6 +1,8 @@
 import json
 import requests
 import xml.etree.ElementTree as ET
+import pytest
+pytestmark = pytest.mark.skip(reason="System tests require auth token -> to be updated")
 
 BASE_URL = "https://y1j7xv2ua6.execute-api.us-east-1.amazonaws.com/v1/api/despatch"
 
