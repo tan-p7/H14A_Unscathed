@@ -1,0 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap');
+
+:root {
+  --teal-900: #0d4f5c;
+  --teal-800: #1a6b7a;
+  --teal-700: #2389a0;
+  --teal-500: #3ec6e0;
+  --teal-400: #6dd8ec;
+  --teal-100: #e6fbff;
+  --teal-50:  #f0fdff;
+  --text-dark: #102a33;
+  --text-mid:  #3a6372;
+  --text-soft: #6e9aa8;
+  --text-pale: #a8ccd5;
+  --white: #ffffff;
+  --off-white: #f5fbfd;
+  --border: #cce7ef;
+}
