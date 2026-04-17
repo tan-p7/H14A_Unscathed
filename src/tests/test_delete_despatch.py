@@ -29,7 +29,7 @@ class TestDeleteDespatchAdvice:
 
             # Ensure that the delete function was called once and works
             mock_table.delete_item.assert_called_once_with(
-                Key={"email_id": "user@example.com", "despatch_id": "123"},
+                Key={"email_address": "user@example.com", "despatch_id": "123"},
                 ReturnValues="ALL_OLD"
             )
 
@@ -66,7 +66,7 @@ class TestDeleteDespatchAdvice:
             # Ensure that the delete function was called once and works
             response = delete_despatch("user@example.com", "123")
             mock_table.delete_item.assert_called_once_with(
-                Key={"email_id": "user@example.com", "despatch_id": "123"},
+                Key={"email_address": "user@example.com", "despatch_id": "123"},
                 ReturnValues="ALL_OLD"
             )
 

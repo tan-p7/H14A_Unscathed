@@ -5,7 +5,9 @@ import uuid
 from datetime import datetime, timezone
 from json import JSONDecodeError
 
-import bcrypt
+## import bcrypt
+import hashlib
+import secrets
 from botocore.exceptions import ClientError
 
 from src.helper_functions import build_response
@@ -17,6 +19,19 @@ import jwt
 MIN_PASSWORD_LENGTH = 8
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
+
+def hash_password(password: str) -> str:
+    salt = secrets.token_hex(16)
+    dk = hashlib.pbkdf2_hmac('sha256', password.encode(), salt.encode(), 310_000)
+    return f"{salt}:{dk.hex()}"
+
+def check_password(password: str, stored: str) -> bool:
+    try:
+        salt, hashed = stored.split(":", 1)
+        dk = hashlib.pbkdf2_hmac('sha256', password.encode(), salt.encode(), 310_000)
+        return secrets.compare_digest(dk.hex(), hashed)
+    except ValueError:
+        return False
 
 def _parse_json_body(body: str) -> dict | None:
     if not body:
@@ -51,7 +66,7 @@ def register(event):
 
     user_id = str(uuid.uuid4())
     created_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    pw_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    pw_hash = hash_password(password)
 
     try:
         users_db.create_user(user_id, email, pw_hash, name, created_at)
@@ -83,7 +98,7 @@ def login(event):
         return build_response(401, JSON_TYPE, "Invalid email or password")
 
     stored = user.get("password_hash") or ""
-    if not bcrypt.checkpw(password.encode("utf-8"), stored.encode("utf-8")):
+    if not check_password(password, stored):
         return build_response(401, JSON_TYPE, "Invalid email or password")
 
     token, _jti, expires_in = create_access_token(user["user_id"], user["email"])

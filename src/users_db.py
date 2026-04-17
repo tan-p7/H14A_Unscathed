@@ -4,11 +4,8 @@ import boto3
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 
-# TODO: Set USERS_TABLE_NAME, USERS_EMAIL_GSI_NAME in Lambda environment (or CDK/Terraform).
-USERS_TABLE_NAME = os.environ.get("USERS_TABLE_NAME", "TODO_USERS_TABLE")
+USERS_TABLE_NAME = os.environ.get("USERS_TABLE_NAME", "users")
 EMAIL_GSI_NAME = os.environ.get("USERS_EMAIL_GSI_NAME", "EmailIndex")
-
-# Optional: JWT revocation list (partition key `jti`, TTL attribute `ttl` — enable TTL on this attribute in console).
 
 _REGION = os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION") or "us-east-1"
 _dynamodb = boto3.resource("dynamodb", region_name=_REGION)

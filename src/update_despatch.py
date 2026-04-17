@@ -53,7 +53,7 @@ def update_despatch_advice(email_id: str, despatch_id: str, body: str):
             return build_response(400, JSON_TYPE, "Note must be text.")
 
         response = src.db.dynamodb_table.get_item(
-            Key={"email_id": email_id, "despatch_id": despatch_id}
+            Key={"email_address": email_id, "despatch_id": despatch_id}
         )
 
         if 'Item' not in response:

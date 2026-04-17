@@ -23,7 +23,7 @@ def retrieve_all_despatch_advice(email_id: str):
     try:
         # Query all despatch ids for this user (email_id partition key)
         response = src.db.dynamodb_table.query(
-            KeyConditionExpression=Key("email_id").eq(email_id)
+            KeyConditionExpression=Key("email_address").eq(email_id)
         )
 
         # Get the items from the response

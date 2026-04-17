@@ -119,6 +119,12 @@ def lambda_handler(event, context):
                     response = build_response(404, JSON_TYPE, "Not Found")
                 else:
                     response = delete_despatch(claims.get("email"), despatch_id)
+        elif http_method == 'GET' and path == '/':
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'text/html'},
+                'body': swagger_ui()
+            }
         else:
             response = build_response(404, JSON_TYPE, 'Not Found')
 
@@ -128,6 +134,30 @@ def lambda_handler(event, context):
         response = build_response(500, JSON_TYPE, 'Server error: Error processing request')
 
     return response
+
+def swagger_ui():
+    return """<!DOCTYPE html>
+<html>
+<head>
+    <title>Despatch Advice API - Docs</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css">
+</head>
+<body>
+<div id="swagger-ui"></div>
+<script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+<script>
+    SwaggerUIBundle({
+        url: "https://api.swaggerhub.com/apis/unsw-7ef/Unscathed_Despatch_API/1.0.0/swagger.json",
+        dom_id: '#swagger-ui',
+        presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
+        layout: "BaseLayout"
+    })
+</script>
+</body>
+</html>"""
+
 
 
 

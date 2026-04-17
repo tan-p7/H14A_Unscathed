@@ -20,7 +20,7 @@ def retrieve_despatch(email_id: str, despatch_id: str):
     try:
         # Verify ownership mapping exists (email_id, despatch_id)
         response = src.db.dynamodb_table.get_item(
-            Key={"email_id": email_id, "despatch_id": despatch_id}
+            Key={"email_address": email_id, "despatch_id": despatch_id}
         )
 
         # Return error if despatch advice does not exist

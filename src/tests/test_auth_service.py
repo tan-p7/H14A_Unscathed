@@ -2,12 +2,27 @@
 import json
 import os
 import pytest
-import bcrypt
+import hashlib
+import secrets
 import jwt
 from unittest.mock import patch
 from botocore.exceptions import ClientError
 
 from src.auth_service import register, login, logout
+
+
+def hash_password(password: str) -> str:
+    salt = secrets.token_hex(16)
+    dk = hashlib.pbkdf2_hmac('sha256', password.encode(), salt.encode(), 310_000)
+    return f"{salt}:{dk.hex()}"
+
+def check_password(password: str, stored: str) -> bool:
+    try:
+        salt, hashed = stored.split(":", 1)
+        dk = hashlib.pbkdf2_hmac('sha256', password.encode(), salt.encode(), 310_000)
+        return secrets.compare_digest(dk.hex(), hashed)
+    except ValueError:
+        return False
 
 
 @pytest.fixture(autouse=True)
@@ -79,14 +94,14 @@ class TestLogin:
         assert r["statusCode"] == 401
 
     def test_wrong_password(self):
-        h = bcrypt.hashpw(b"right", bcrypt.gensalt()).decode("utf-8")
+        h = hash_password("rightpassword")
         user = {"user_id": "u1", "email": "a@b.com", "password_hash": h}
         with patch("src.auth_service.users_db.get_user_by_email", return_value=user):
             r = login(_event({"email": "a@b.com", "password": "wrongpass"}))
         assert r["statusCode"] == 401
 
     def test_success(self):
-        h = bcrypt.hashpw(b"mypassword", bcrypt.gensalt()).decode("utf-8")
+        h = hash_password("mypassword")
         user = {"user_id": "u1", "email": "a@b.com", "password_hash": h}
         with patch("src.auth_service.users_db.get_user_by_email", return_value=user):
             r = login(_event({"email": "a@b.com", "password": "mypassword"}))

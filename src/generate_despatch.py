@@ -291,7 +291,7 @@ def generate_despatch(order_xml_string, email_id: str):
 
             src.db.dynamodb_table.put_item(
                 Item={
-                    "email_id": email_id,
+                    "email_address": email_id,
                     "despatch_id": despatch_id,
                 }
             )

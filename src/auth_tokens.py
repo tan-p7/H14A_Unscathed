@@ -4,7 +4,6 @@ import time
 import uuid
 import jwt
 
-# TODO: Set JWT_SECRET in Lambda env; use AWS Secrets Manager in production (do not commit real secrets).
 JWT_ALGORITHM = "HS256"
 
 
