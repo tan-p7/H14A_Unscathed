@@ -15,6 +15,22 @@ def extract_bearer_token(event) -> str | None:
         return None
     return parts[1].strip() or None
 
+def extract_order_access_token(event) -> str | None:
+    headers = event.get("headers") or {}
+    # API Gateway may normalize header names to lower case
+    auth = headers.get("orderAccessToken") or headers.get("orderaccesstoken")
+    if not auth or not isinstance(auth, str):
+        return None
+    return auth
+
+def extract_order_refresh_token(event) -> str | None:
+    headers = event.get("headers") or {}
+    # API Gateway may normalize header names to lower case
+    auth = headers.get("orderRefreshToken") or headers.get("orderefreshtoken")
+    if not auth or not isinstance(auth, str):
+        return None
+    return auth
+
 
 def get_auth_context(event) -> tuple[dict | None, str | None]:
     """
