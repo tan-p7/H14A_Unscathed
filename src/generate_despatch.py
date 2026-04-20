@@ -1,4 +1,5 @@
 import json
+import base64
 import xml.etree.ElementTree as ET
 import xmlschema
 import uuid
@@ -138,7 +139,21 @@ def append_party(parent, party: dict):
         if contact.get('telefax'):   cbc_add(ce, 'Telefax',        contact['telefax'])
         if contact.get('email'):     cbc_add(ce, 'ElectronicMail', contact['email'])
 
-def generate_despatch(order_xml_string):
+def generate_despatch(order_xml_string, event=None):
+    def _extract_email(evt):
+        """Decode JWT from Authorization header (no verification — Lambda sits behind API GW authorizer)."""
+        try:
+            token = (evt.get('headers') or {}).get('Authorization', '')
+            if token.lower().startswith('bearer '):
+                token = token[7:]
+            payload_b64 = token.split('.')[1]
+            # Add padding if needed
+            payload_b64 += '=' * (-len(payload_b64) % 4)
+            payload = json.loads(base64.urlsafe_b64decode(payload_b64))
+            return payload.get('email') or payload.get('sub') or payload.get('username') or ''
+        except Exception:
+            return ''
+
     try:
         root = ET.fromstring(order_xml_string.encode())
 
@@ -284,10 +299,11 @@ def generate_despatch(order_xml_string):
         try:
             s3.s3_client.put_object(s3.BUCKET_NAME, f"dispatches/{despatch_id}.xml", despatch_xml_bytes, 'application/xml')
 
+            email_address = _extract_email(event or {})
             src.db.dynamodb_table.put_item(
-                {
+                Item={
                     'despatch_id': despatch_id,
-                    ## 'user_id': 'blahblah'
+                    'email_address': email_address,
                 }
             )
 

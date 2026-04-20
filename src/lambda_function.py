@@ -40,7 +40,7 @@ def lambda_handler(event, context):
             return health_check(event, context)
         elif http_method == 'POST' and path == DESPATCH_ADVICE_PATH:
             body = event.get('body') or ''
-            return generate_despatch(body)
+            return generate_despatch(body, event)
         elif http_method == 'GET' and path == DESPATCH_ADVICE_PATH:
             response = retrieve_all_despatch_advice()
         elif http_method == 'GET' and path.startswith(DESPATCH_ADVICE_PATH) and path_parameters:
