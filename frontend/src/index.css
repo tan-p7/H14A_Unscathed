@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Conthrax';
+  src: url('./fonts/Conthrax-SemiBold.otf') format('opentype');
+  font-weight: 600;
+}
+
 @theme {
   --color-deep-sky-blue-50: #e5f8ff;
   --color-deep-sky-blue-100: #ccf1ff;
@@ -12,4 +18,6 @@
   --color-deep-sky-blue-800: #004966;
   --color-deep-sky-blue-900: #002533;
   --color-deep-sky-blue-950: #001a24;
+  --font-conthrax: 'Conthrax', sans-serif;
 }
+
