@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function Register() {
+    const [name, setName] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
@@ -11,11 +12,19 @@ export default function Register() {
     const handleSubmit = async (event) => {
         event.preventDefault()
 
-        if (password === confirmPassword) {
-            console.log(email, password)
-        } else {
+        if (password !== confirmPassword) {
             console.log('Passwords do not match')
+            return
         }
+
+        const response = await fetch('/atlas/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password })
+        })
+
+        const data = await response.json()
+        console.log(data)
     }
 
     return (
@@ -32,12 +41,17 @@ export default function Register() {
                 <p className="text-gray-500 mb-4 text-center">Create your account</p>
                 <form onSubmit={handleSubmit}>
                     <input
+                        type="text"
+                        placeholder="Name"
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4"/>
+                    <input
                         type="email"
                         placeholder="Email"
                         value={email}
                         onChange={(event) => setEmail(event.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4"
-                    />
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4"/>
                     <div className="relative mb-4">
                         <input 
                             type={showPassword ? 'text' : 'password'}
