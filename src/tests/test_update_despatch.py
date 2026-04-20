@@ -63,7 +63,7 @@ class TestUpdateDespatchAdviceSuccess:
             }
             mock_s3_client.put_object.return_value = {}
 
-            response = update_despatch_advice("123", body)
+            response = update_despatch_advice("user@example.com", "123", body)
 
             assert response["statusCode"] == 200
             mock_s3_client.put_object.assert_called_once()
@@ -90,7 +90,7 @@ class TestUpdateDespatchAdviceSuccess:
             }
             mock_s3_client.put_object.return_value = {}
 
-            response = update_despatch_advice("123", body)
+            response = update_despatch_advice("user@example.com", "123", body)
 
             assert response["statusCode"] == 200
             mock_s3_client.put_object.assert_called_once()
@@ -117,7 +117,7 @@ class TestUpdateDespatchAdviceSuccess:
             }
             mock_s3_client.put_object.return_value = {}
 
-            response = update_despatch_advice("123", body)
+            response = update_despatch_advice("user@example.com", "123", body)
 
             assert response["statusCode"] == 200
             updated_xml = mock_s3_client.put_object.call_args[1]['Body'].decode('utf-8')
@@ -140,7 +140,7 @@ class TestUpdateDespatchAdviceSuccess:
             }
             mock_s3_client.put_object.return_value = {}
 
-            response = update_despatch_advice("123", body)
+            response = update_despatch_advice("user@example.com", "123", body)
 
             assert response["statusCode"] == 200
             updated_xml = mock_s3_client.put_object.call_args[1]['Body'].decode('utf-8')

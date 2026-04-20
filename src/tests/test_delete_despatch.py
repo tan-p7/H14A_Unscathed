@@ -24,12 +24,12 @@ class TestDeleteDespatchAdvice:
             mock_table.delete_item.return_value = mock_response
             mock_s3.delete_object.return_value = {}
             
-            response = delete_despatch("123")
+            response = delete_despatch("user@example.com", "123")
 
 
             # Ensure that the delete function was called once and works
             mock_table.delete_item.assert_called_once_with(
-                Key={"despatch_id": "123"},
+                Key={"email_address": "user@example.com", "despatch_id": "123"},
                 ReturnValues="ALL_OLD"
             )
 
@@ -44,7 +44,7 @@ class TestDeleteDespatchAdvice:
             mock_table.delete_item.return_value = mock_response
 
             # Try to delete a non-existent despatch advice
-            response = delete_despatch("-100")
+            response = delete_despatch("user@example.com", "-100")
             assert response["statusCode"] == 404
 
     # Test that the deleting the table returns 503 when AWS throws a ClientError
@@ -64,9 +64,9 @@ class TestDeleteDespatchAdvice:
             mock_table.delete_item.side_effect = error
 
             # Ensure that the delete function was called once and works
-            response = delete_despatch("123")
+            response = delete_despatch("user@example.com", "123")
             mock_table.delete_item.assert_called_once_with(
-                Key={"despatch_id": "123"},
+                Key={"email_address": "user@example.com", "despatch_id": "123"},
                 ReturnValues="ALL_OLD"
             )
 

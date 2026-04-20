@@ -19,7 +19,7 @@ def _is_numeric(value):
     return isinstance(value, (int, float)) and not isinstance(value, bool) 
 
 
-def update_despatch_advice(despatch_id, body):
+def update_despatch_advice(email_id: str, despatch_id: str, body: str):
     """ Retrieves the despatch advice with the corresponding despatch ID if the ID provided is valid and
         and updates the despatch advice document. 
 
@@ -52,7 +52,9 @@ def update_despatch_advice(despatch_id, body):
         if note is not None and not isinstance(note, str):
             return build_response(400, JSON_TYPE, "Note must be text.")
 
-        response = src.db.dynamodb_table.get_item(Key={'despatch_id': despatch_id}) 
+        response = src.db.dynamodb_table.get_item(
+            Key={"email_address": email_id, "despatch_id": despatch_id}
+        )
 
         if 'Item' not in response:
             return build_response(404, JSON_TYPE, f'Despatch advice {despatch_id} not found')
@@ -67,7 +69,8 @@ def update_despatch_advice(despatch_id, body):
             xml_string = s3_response['Body'].read().decode('utf-8')
         except ClientError as e:
             print('Error:', e)
-            return build_response(500, JSON_TYPE, 'Stored despatch document is invalid XML.')
+            # S3 retrieval failure (missing object, access denied, etc.)
+            return build_response(404, JSON_TYPE, f'Despatch advice {despatch_id} not found')
 
         try:
             root = ET.fromstring(xml_string)

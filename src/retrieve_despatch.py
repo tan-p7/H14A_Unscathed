@@ -7,7 +7,7 @@ from src.helper_functions import build_response
 from src.constants import JSON_TYPE, XML_TYPE
 import src.db
 
-def retrieve_despatch(despatch_id):
+def retrieve_despatch(email_id: str, despatch_id: str):
     """ Retrieves the despatch advice with the corresponding despatch ID if the ID provided is valid.
 
     Args:
@@ -18,8 +18,10 @@ def retrieve_despatch(despatch_id):
     """
 
     try:
-        # Try to retrieve the despatch advice using despatch_id
-        response = src.db.dynamodb_table.get_item(Key={'despatch_id': despatch_id})
+        # Verify ownership mapping exists (email_id, despatch_id)
+        response = src.db.dynamodb_table.get_item(
+            Key={"email_address": email_id, "despatch_id": despatch_id}
+        )
 
         # Return error if despatch advice does not exist
         if 'Item' not in response:

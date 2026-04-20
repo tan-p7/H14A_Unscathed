@@ -8,7 +8,7 @@ from src.helper_functions import build_response
 from src.constants import JSON_TYPE
 
 
-def delete_despatch(despatch_id):
+def delete_despatch(email_id: str, despatch_id: str):
     """ Deletes the despatch advice with the corresponding despatch ID if the ID provided is valid.
 
     Args:
@@ -21,7 +21,7 @@ def delete_despatch(despatch_id):
     try:
         # Try to delete the despatch advice using despatch_id
         response = src.db.dynamodb_table.delete_item(
-            Key={'despatch_id': despatch_id},
+            Key={"email_address": email_id, "despatch_id": despatch_id},
             ReturnValues='ALL_OLD'
         )
 

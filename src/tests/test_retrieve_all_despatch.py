@@ -20,10 +20,10 @@ class TestRetrieveAllDespatchAdvice:
             "Scan"
         )
         with patch("src.db.dynamodb_table") as mock_table:
-            mock_table.scan.side_effect = error
+            mock_table.query.side_effect = error
 
-            response = retrieve_all_despatch_advice()
-            mock_table.scan.assert_called_once()
+            response = retrieve_all_despatch_advice("user@example.com")
+            mock_table.query.assert_called_once()
             assert response["statusCode"] == 503
             assert response["headers"]["Content-Type"] == "application/json"
 
@@ -44,14 +44,14 @@ class TestRetrieveAllDespatchAdvice:
              patch("src.s3.s3_client") as mock_s3_client, \
              patch("src.s3.BUCKET_NAME", "mock-bucket"):
 
-            mock_table.scan.return_value = {"Items": mock_dynamodb_response}
+            mock_table.query.return_value = {"Items": mock_dynamodb_response}
 
             def mock_get_object(Bucket, Key):
                 return {"Body": MagicMock(read=lambda: mock_s3_objects[Key])}
 
             mock_s3_client.get_object.side_effect = mock_get_object
 
-            response = retrieve_all_despatch_advice()
+            response = retrieve_all_despatch_advice("user@example.com")
 
         # Check that the correct response was returned
         assert response["statusCode"] == 200
@@ -72,12 +72,12 @@ class TestRetrieveAllDespatchAdvice:
              patch("src.s3.s3_client") as mock_s3_client, \
              patch("src.s3.BUCKET_NAME", "mock-bucket"):
 
-            mock_table.scan.return_value = {"Items": mock_dynamodb_response}
+            mock_table.query.return_value = {"Items": mock_dynamodb_response}
 
             # Try to retrieve non-existent despatch advice
-            response = retrieve_all_despatch_advice()
+            response = retrieve_all_despatch_advice("user@example.com")
 
-            mock_table.scan.assert_called_once()
+            mock_table.query.assert_called_once()
 
         # Returns a 200 response with an empty DespatchAdviceList container.
         assert response["statusCode"] == 200

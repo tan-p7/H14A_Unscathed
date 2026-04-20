@@ -20,9 +20,9 @@ class TestRetrieveDespatchAdviceById:
             mock_table.get_item.return_value = mock_dynamodb_response
             mock_s3_client.get_object.return_value = {"Body": MagicMock(read=lambda: mock_s3_response)}
 
-            response = retrieve_despatch("123")
+            response = retrieve_despatch("user@example.com", "123")
 
-            mock_table.get_item.assert_called_once_with(Key={"despatch_id": "123"})
+            mock_table.get_item.assert_called_once_with(Key={"email_address": "user@example.com", "despatch_id": "123"})
             mock_s3_client.get_object.assert_called_once_with(
                 Bucket="mock-bucket",
                 Key="dispatches/123.xml"
@@ -40,8 +40,8 @@ class TestRetrieveDespatchAdviceById:
 
         with patch("src.db.dynamodb_table") as mock_table:
             mock_table.get_item.return_value = mock_dynamodb_response
-            response = retrieve_despatch("999")
-            mock_table.get_item.assert_called_once_with(Key={"despatch_id": "999"})
+            response = retrieve_despatch("user@example.com", "999")
+            mock_table.get_item.assert_called_once_with(Key={"email_address": "user@example.com", "despatch_id": "999"})
 
             # Check that a 404 response was returned
             assert response["statusCode"] == 404
@@ -62,8 +62,8 @@ class TestRetrieveDespatchAdviceById:
 
         with patch("src.db.dynamodb_table") as mock_table:
             mock_table.get_item.side_effect = error
-            response = retrieve_despatch("123")
-            mock_table.get_item.assert_called_once_with(Key={"despatch_id": "123"})
+            response = retrieve_despatch("user@example.com", "123")
+            mock_table.get_item.assert_called_once_with(Key={"email_address": "user@example.com", "despatch_id": "123"})
 
             # Check that it fails to retrieve when AWS throws a client error
             assert response["statusCode"] == 503
