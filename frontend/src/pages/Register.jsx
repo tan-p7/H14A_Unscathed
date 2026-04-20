@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function Register() {
     const [email, setEmail] = useState('')
@@ -40,6 +41,7 @@ export default function Register() {
                 />
                 <button type="submit">Register</button>
             </form>
+            <p>Already have an account? <Link to="/">Log in</Link></p>
         </div>
         
     )
