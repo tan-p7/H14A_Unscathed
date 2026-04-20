@@ -9,14 +9,21 @@ export default function Login() {
     const handleSubmit = async (event) => {
         event.preventDefault()
 
-         const response = await fetch('/atlas/login', {
+        const response = await fetch('/atlas/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         })
 
-        console.log(email, password)
+        const data = await response.json()
+
+        if (response.status === 200) {
+            localStorage.setItem('accessToken', data.accessToken)
+            console.log('Logged in successfully')
+        } else {
+            console.log('Invalid email or password')
         }
+    }
     return (
         <div 
             className="min-h-screen flex items-center justify-center"
