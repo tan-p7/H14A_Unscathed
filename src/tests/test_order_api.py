@@ -46,7 +46,7 @@ class Test:
             "imageUrl": "https://example.com/images/mouse.png"
         }
         makeItemResponse = requests.post(f"{ORDER_URL}/items", json=item, headers=headers)
-        assert makeItemResponse.status_code == 200
+        assert makeItemResponse.status_code == 201
         item_id = makeItemResponse.json()['item'][0]['item_id']
 
         # add to cart
