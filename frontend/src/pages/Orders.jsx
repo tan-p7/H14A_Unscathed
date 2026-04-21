@@ -69,7 +69,14 @@ export default function Orders() {
                                     <td className="px-4 py-3">{order.name}</td>
                                     <td className="px-4 py-3 text-gray-500">{order.date}</td>
                                     <td className="px-4 py-3">
-                                        <span className="px-2 py-1 rounded-full text-xs bg-gray-100">{order.status}</span>
+                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                            order.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                                            order.status === 'Delivered' ? 'bg-green-100 text-green-700' :
+                                            order.status === 'Processing' ? 'bg-blue-100 text-blue-700' :
+                                            'bg-gray-100 text-gray-600'
+                                        }`}>
+                                            {order.status}
+                                        </span>
                                     </td>
                                     <td className="px-4 py-3">{order.total}</td>
                                 </tr>
