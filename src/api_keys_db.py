@@ -3,21 +3,27 @@ import os
 import boto3
 from datetime import datetime
 
-_REGION = os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION") or "us-east-1"
-dynamodb = boto3.resource('dynamodb', region_name=_REGION)
-table = dynamodb.Table('api_keys')
+TABLE_NAME = "api_keys"
+
+
+def get_table():
+    region = os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION") or "us-east-1"
+    dynamodb = boto3.resource("dynamodb", region_name=region)
+    return dynamodb.Table(TABLE_NAME)
 
 
 def create_api_key(owner: str) -> str:
+    table = get_table()
+
     api_key = str(uuid.uuid4())
 
     table.put_item(
         Item={
-        "api_key": api_key,
-        "owner": owner,
-        "scope": "full",
-        "active": True,
-        "created_at": datetime.utcnow().isoformat()
+            "api_key": api_key,
+            "owner": owner,
+            "scope": "full",
+            "active": True,
+            "created_at": datetime.utcnow().isoformat()
         }
     )
 
@@ -25,9 +31,9 @@ def create_api_key(owner: str) -> str:
 
 
 def get_api_key(api_key: str):
-    response = table.get_item(
-        Key={"api_key": api_key}
-    )
+    table = get_table()
+
+    response = table.get_item(Key={"api_key": api_key})
     return response.get("Item")
 
 
@@ -37,7 +43,6 @@ def is_valid_api_key(api_key: str) -> bool:
     if not item:
         return False
 
-    # Optional expiry check
     if "expires_at" in item:
         if datetime.utcnow().isoformat() > item["expires_at"]:
             return False
