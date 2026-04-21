@@ -17,15 +17,13 @@ export default function CreateOrder() {
                     placeholder="Order Name"
                     value={orderName}
                     onChange={(event) => setOrderName(event.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4"
-                />
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4"/>
                 <input
                     type="text"
                     placeholder="Seller ID"
                     value={sellerId}
                     onChange={(event) => setSellerId(event.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4"
-                />
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4"/>
                 <input
                     type="text"
                     placeholder="Currency Code (e.g. AUD)"

@@ -7,6 +7,7 @@ import Terms from './pages/Terms'
 import Dashboard from './pages/Dashboard'
 import Orders from './pages/Orders'
 import CreateOrder from './pages/CreateOrder'
+import Despatch from './pages/Despatch'
 
 export  default function App() {
   return (
@@ -20,6 +21,7 @@ export  default function App() {
         <Route path="/dashboard" element={<Dashboard/>} />
         <Route path="/orders" element={<Orders/>} />
         <Route path="/create-order" element={<CreateOrder/>} />
+        <Route path="/despatch" element={<Despatch/>} />
       </Routes>
     </BrowserRouter>
   )
