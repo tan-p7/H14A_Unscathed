@@ -3,8 +3,7 @@ from botocore.exceptions import ClientError
 import requests
 import json
 from datetime import datetime
-#from src.order_handling import createOrder
-
+import xml.etree.ElementTree as ET
 # Import helper function and constants to build the JSON response
 from src.helper_functions import build_response
 from src.constants import JSON_TYPE, XML_TYPE, INVOICE_URL, INVOICE_API_KEY
@@ -12,12 +11,14 @@ from src.constants import JSON_TYPE, XML_TYPE, INVOICE_URL, INVOICE_API_KEY
 HEADERS = {"X-API-Key": {INVOICE_API_KEY}}
 
 
+
 def createInvoice():
     try:
         invoice_info = {
-            "order_reference": "",
-            "customer_id": "",
+            "order_reference":"ORD-1001",
+            "customer_id": "CUST-2001",
             "issue_date": datetime.now().strftime("%Y-%m-%d"),
+            "due_date": "2026-07-23",
             "currency": "AUD",
             "supplier": {
                 "name": "Invoice Generation API Supplier",
@@ -94,6 +95,16 @@ def deleteInvoiceById(invoice_id):
         return build_response(503, JSON_TYPE, e.response['Error']['Message'])
     
 
+
+def createCreditNote(invoice_id):
+    try:
+        credit_note_info = {
+            "reason": "Customer order cancelled after invoicing"
+        }
+        response = requests.post(f"{INVOICE_URL}/invoices/{invoice_id}/credit-notes", json=credit_note_info, headers=HEADERS)
+        return build_response(response.status_code, JSON_TYPE, response.json())
+    except ClientError as e:
+        return build_response(503, JSON_TYPE, e.response['Error']['Message'])
 
 
 
