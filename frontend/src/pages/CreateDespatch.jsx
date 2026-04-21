@@ -2,6 +2,22 @@ import { useState, useEffect, useRef } from 'react'
 import DashboardLayout from '../components/DashboardLayout'
 
 export default function CreateDespatch() {
+    const [docId, setDocId] = useState(crypto.randomUUID())
+    const [issueDate, setIssueDate] = useState(new Date().toISOString().split('T')[0])
+    const [issueTime, setIssueTime] = useState(new Date().toTimeString().split(' ')[0])
+    const [docNote, setDocNote] = useState('')
+    const [orderRefId, setOrderRefId] = useState('')
+    const [supplierPartyName, setSupplierPartyName] = useState('')
+    const [supplierEndpointId, setSupplierEndpointId] = useState('')
+    const [supplierSchemeId, setSupplierSchemeId] = useState('')
+    const [customerPartyName, setCustomerPartyName] = useState('')
+    const [customerEndpointId, setCustomerEndpointId] = useState('')
+    const [customerSchemeId, setCustomerSchemeId] = useState('')
+    const [streetName, setStreetName] = useState('')
+    const [cityName, setCityName] = useState('')
+    const [postalZone, setPostalZone] = useState('')
+    const [country, setCountry] = useState('')
+    const [countryCode, setCountryCode] = useState('')
     const [mode, setMode] = useState(null)
     const [file, setFile] = useState(null)
     const [hoverSelect, setHoverSelect] = useState(false)
@@ -23,9 +39,44 @@ export default function CreateDespatch() {
         const token = localStorage.getItem('accessToken')
         let body
 
-        if (mode === 'upload' || file) {
+        if (file) {
             const xmlText = await file.text()
             body = JSON.stringify({ xml: xmlText })
+        } else if (mode === 'manual') {
+            body = JSON.stringify({
+                xml: {
+                    xmlns: 'urn:oasis:names:specification:ubl:schema:xsd:Order-2',
+                    ID: docId,
+                    IssueDate: issueDate,
+                    IssueTime: issueTime,
+                    Note: docNote,
+                    orderReference: { id: orderRefId },
+                    despatchSupplierParty: {
+                        party: {
+                            endpointId: { value: supplierEndpointId, schemeId: supplierSchemeId },
+                            partyName: { name: supplierPartyName }
+                        }
+                    },
+                    deliveryCustomerParty: {
+                        party: {
+                            endpointId: { value: customerEndpointId, schemeId: customerSchemeId },
+                            partyName: { name: customerPartyName }
+                        }
+                    },
+                    shipment: {
+                        id: '1',
+                        delivery: {
+                            deliveryAddress: {
+                                streetName,
+                                cityName,
+                                postalZone,
+                                countrySubentity: country,
+                                country: { identificationCode: countryCode }
+                            }
+                        }
+                    }
+                }
+            })
         }
 
         const response = await fetch('/atlas/api/despatch/despatch-advice', {
@@ -94,8 +145,50 @@ export default function CreateDespatch() {
                     />
 
                     {mode === 'manual' && (
-                        <div className="mt-6 flex flex-col gap-4">
-                            <p className="text-gray-400 text-sm">Manual input fields coming soon</p>
+                        <div className="mt-6 flex flex-col gap-6">
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-600 mb-3">Document Details</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <input type="text" placeholder="ID" value={docId} onChange={(e) => setDocId(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 text-sm" />
+                                    <input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 text-sm" />
+                                    <input type="time" value={issueTime} onChange={(e) => setIssueTime(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 text-sm" />
+                                    <input type="text" placeholder="Note" value={docNote} onChange={(e) => setDocNote(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 text-sm" />
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-600 mb-3">Order Reference</h3>
+                                <input type="text" placeholder="Order Reference ID" value={orderRefId} onChange={(e) => setOrderRefId(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm" />
+                            </div>
+
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-600 mb-3">Supplier</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <input type="text" placeholder="Party Name" value={supplierPartyName} onChange={(e) => setSupplierPartyName(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 text-sm" />
+                                    <input type="text" placeholder="Endpoint ID" value={supplierEndpointId} onChange={(e) => setSupplierEndpointId(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 text-sm" />
+                                    <input type="text" placeholder="Scheme ID" value={supplierSchemeId} onChange={(e) => setSupplierSchemeId(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 text-sm" />
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-600 mb-3">Customer</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <input type="text" placeholder="Party Name" value={customerPartyName} onChange={(e) => setCustomerPartyName(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 text-sm" />
+                                    <input type="text" placeholder="Endpoint ID" value={customerEndpointId} onChange={(e) => setCustomerEndpointId(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 text-sm" />
+                                    <input type="text" placeholder="Scheme ID" value={customerSchemeId} onChange={(e) => setCustomerSchemeId(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 text-sm" />
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-600 mb-3">Delivery Address</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <input type="text" placeholder="Street Name" value={streetName} onChange={(e) => setStreetName(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 text-sm" />
+                                    <input type="text" placeholder="City" value={cityName} onChange={(e) => setCityName(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 text-sm" />
+                                    <input type="text" placeholder="Postal Zone" value={postalZone} onChange={(e) => setPostalZone(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 text-sm" />
+                                    <input type="text" placeholder="Country" value={country} onChange={(e) => setCountry(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 text-sm" />
+                                    <input type="text" placeholder="Country Code (e.g. AU)" value={countryCode} onChange={(e) => setCountryCode(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 text-sm" />
+                                </div>
+                            </div>
                         </div>
                     )}
 
