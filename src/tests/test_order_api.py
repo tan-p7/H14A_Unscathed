@@ -1,6 +1,6 @@
 import requests
 import json
-from src.constants import ORDER_URL
+from src.constants import ORDER_URL, UNSCATHED_EMAIL, UNSCATHED_PW
 from src.shopping_cart import addItemToShoppingCart, removeItemFromShoppingCart, updateItemInShoppingCart, retrieveShoppingCart, clearShoppingCart
 from src.order_handling import createOrder, retrieveOrderById, updateOrder, deleteOrder
 import xml.etree.ElementTree as ET
