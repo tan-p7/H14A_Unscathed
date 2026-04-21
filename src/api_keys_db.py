@@ -1,8 +1,10 @@
 import uuid
+import os
 import boto3
 from datetime import datetime
 
-dynamodb = boto3.resource('dynamodb')
+_REGION = os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION") or "us-east-1"
+dynamodb = boto3.resource('dynamodb', region_name=_REGION)
 table = dynamodb.Table('api_keys')
 
 
