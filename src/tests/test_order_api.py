@@ -23,6 +23,47 @@ def get_order_id(response):
 class Test:
 
     def test_order(self):
+        # make item
+        loginBody = {
+            "email": UNSCATHED_EMAIL,
+            "password": UNSCATHED_PW
+        }
+        loginResponse = requests.post(f"{ORDER_URL}/auth/login", json=loginBody)
+        assert loginResponse.status_code == 200
+
+        orderAccessToken = loginResponse.json()['accessToken']
+
+        authorization = "Bearer " + orderAccessToken
+        headers = {
+            "Authorization": authorization
+        }
+
+        item = {
+            "itemName": "Wireless Mouse",
+            "description": "Ergonomic wireless mouse with 2.4GHz receiver",
+            "price": 29.99,
+            "quantityAvailable": 100,
+            "imageUrl": "https://example.com/images/mouse.png"
+        }
+        makeItemResponse = requests.post(f"{ORDER_URL}/items", json=item, headers=headers)
+        assert makeItemResponse.status_code == 200
+        item_id = makeItemResponse.json()['item'][0]['item_id']
+
+        # add to cart
+        addToCartResponse = addItemToShoppingCart({ "itemId": item_id, "quantity": 2 })
+        assert addToCartResponse["statusCode"] == 200
+
+        # check cart
+        retrieveCartResponse = retrieveShoppingCart()
+        assert retrieveCartResponse["statusCode"] == 200
+
+        # delete from cart
+        deleteFromCartResponse = removeItemFromShoppingCart(item_id)
+        assert deleteFromCartResponse["statusCode"] == 200
+
+        # re add to cart
+        addToCartResponse = addItemToShoppingCart({ "itemId": item_id, "quantity": 2 })
+        assert addToCartResponse["statusCode"] == 200
 
         # order create
         createOrderResponse = createOrder()
