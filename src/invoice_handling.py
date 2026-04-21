@@ -3,178 +3,102 @@ from botocore.exceptions import ClientError
 import requests
 import json
 from datetime import datetime
+#from src.order_handling import createOrder
 
 # Import helper function and constants to build the JSON response
 from src.helper_functions import build_response
-from src.constants import JSON_TYPE, XML_TYPE, ORDER_URL, UNSCATHED_SELLER_ID, UNSCATHED_EMAIL, UNSCATHED_PW
+from src.constants import JSON_TYPE, XML_TYPE, INVOICE_URL, INVOICE_API_KEY
 
-def lmpLogin():
+HEADERS = {"X-API-Key": {INVOICE_API_KEY}}
+
+
+def createInvoice():
     try:
-        loginBody = {
-            "email": UNSCATHED_EMAIL,
-            "password": UNSCATHED_PW
+        invoice_info = {
+            "order_reference": "",
+            "customer_id": "",
+            "issue_date": datetime.now().strftime("%Y-%m-%d"),
+            "currency": "AUD",
+            "supplier": {
+                "name": "Invoice Generation API Supplier",
+                "identifier": "OUR-COMPANY"
+            },
+            "customer": {
+                "name": "Customer A",
+                "identifier": "CUST-2001"
+            },
+            "items": [
+                {
+                "name": "Consulting Service",
+                "description": "Business consulting engagement",
+                "quantity": 1,
+                "unit_price": 99.99,
+                "unit_code": "EA"
+                }
+            ]
         }
-        loginResponse = requests.post(f"{ORDER_URL}/auth/login", json=loginBody)
-        if loginResponse.status_code != 200:
-            return build_response(503, JSON_TYPE, loginResponse.json())
-
-        orderAccessToken = loginResponse.json()['accessToken']
-        orderRefreshToken = loginResponse.json()['refreshToken']
-        # body = event.get('body') or '{}'
-
-        authorization = "Bearer " + orderAccessToken
-        headers = {
-            "Authorization": authorization
-        }
-
-        retrieveCartResponse = requests.get(f"{ORDER_URL}/cart", headers=headers)
-        if retrieveCartResponse.status_code != 200:
-            return build_response(retrieveCartResponse.status_code, JSON_TYPE, retrieveCartResponse.json())
-
-        cart = retrieveCartResponse.json()['items']
-        order_items = []
-        for item in cart:
-            new_item = {
-                "itemID": item['item_id'],
-                "quantity": item['quantity'],
-                "priceAtPurchase": float(item['price'])
-            }
-            order_items.append(new_item)
-
-        now = datetime.now()
-        order_time = now.strftime("%Y-%m-%d %H:%M:%S")
-
-        order_info = {
-            "orderName": "Purchase Order " + order_time,
-            "sellerId": UNSCATHED_SELLER_ID,
-            "documentCurrencyCode": "AUD",
-            "pricingCurrencyCode": "AUD",
-            "taxCurrencyCode": "AUD",
-            "requestedInvoiceCurrencyCode": "AUD",
-            "accountingCost": 150,
-            "paymentMethodCode": "CreditCard",
-            "destinationCountryCode": "AU",
-            "orderLines": order_items
-        }
-
-        logoutBody = {
-            "refreshToken": orderRefreshToken
-        }
-        # print(order_items)
-
-        createOrderResponse = requests.post(f"{ORDER_URL}/orders", json=order_info, headers=headers)
-        xml = createOrderResponse.text
-        clearCartResponse = requests.delete(f"{ORDER_URL}/cart", headers=headers)
-        logoutResponse = requests.post(f"{ORDER_URL}/auth/logout", json=logoutBody, headers=headers)
-        return build_response(createOrderResponse.status_code, XML_TYPE, xml)
-
+    
+        response = requests.post(f"{INVOICE_URL}/invoices", json=invoice_info, headers=HEADERS)
+        return build_response(response.status_code, JSON_TYPE, response.json())
     except ClientError as e:
-        print('Error:', e)
         return build_response(503, JSON_TYPE, e.response['Error']['Message'])
 
-def retrieveOrderById(order_id):
+
+
+def retrieveInvoiceById(invoice_id):
     try:
-        loginBody = {
-            "email": UNSCATHED_EMAIL,
-            "password": UNSCATHED_PW
-        }
-        loginResponse = requests.post(f"{ORDER_URL}/auth/login", json=loginBody)
-        if loginResponse.status_code != 200:
-            return build_response(503, JSON_TYPE, loginResponse.json())
-
-        orderAccessToken = loginResponse.json()['accessToken']
-        orderRefreshToken = loginResponse.json()['refreshToken']
-        # body = event.get('body') or '{}'
-
-        authorization = "Bearer " + orderAccessToken
-        headers = {
-            "Authorization": authorization
-        }
-
-        logoutBody = {
-            "refreshToken": orderRefreshToken
-        }
-
-        # order_id = event['pathParameters'].get('order-id')
-
-        retrieveOrderResponse = requests.get(f"{ORDER_URL}/orders/{order_id}", headers=headers)
-        logoutResponse = requests.post(f"{ORDER_URL}/auth/logout", json=logoutBody, headers=headers)
-        return build_response(retrieveOrderResponse.status_code, JSON_TYPE, retrieveOrderResponse.json())
-
+        response = requests.get(f"{INVOICE_URL}/invoices/{invoice_id}", headers=HEADERS)
+        return build_response(response.status_code, JSON_TYPE, response.json())
     except ClientError as e:
-        print('Error:', e)
+        return build_response(503, JSON_TYPE, e.response['Error']['Message'])
+    
+
+def updateInvoiceById(invoice_id):
+    try:
+        update_info = {
+            "order_reference": "ORD-UPDATED",
+            "issue_date": datetime.now().strftime("%Y-%m-%d"),
+            "due_date": "2026-03-28",
+            "currency": "AUD",
+            "supplier": {
+                "name": "Updated Supplier",
+                "identifier": "SUP-001"
+            },
+            "customer": {
+                "name": "Updated Customer",
+                "identifier": "CUST-2001"
+            },
+            "items": [
+                {
+                    "name": "Updated Service",
+                    "description": "Repriced work",
+                    "quantity": 2,
+                    "unit_price": 12.5,
+                    "unit_code": "EA"
+                }
+            ]
+        }   
+        response = requests.put(f"{INVOICE_URL}/invoices/{invoice_id}", json=update_info, headers=HEADERS)
+        return build_response(response.status_code, JSON_TYPE, response.json())
+    except ClientError as e:
         return build_response(503, JSON_TYPE, e.response['Error']['Message'])
 
-def updateOrder(order_id, body):
+
+def deleteInvoiceById(invoice_id):
     try:
-        loginBody = {
-            "email": UNSCATHED_EMAIL,
-            "password": UNSCATHED_PW
-        }
-        loginResponse = requests.post(f"{ORDER_URL}/auth/login", json=loginBody)
-        if loginResponse.status_code != 200:
-            return build_response(503, JSON_TYPE, loginResponse.json())
-
-        orderAccessToken = loginResponse.json()['accessToken']
-        orderRefreshToken = loginResponse.json()['refreshToken']
-        # body = event.get('body') or '{}'
-
-        authorization = "Bearer " + orderAccessToken
-        headers = {
-            "Authorization": authorization
-        }
-
-        # order_id = event['pathParameters'].get('order-id')
-        # order_time = now.strftime("%Y-%m-%d %H:%M:%S")
-        # update_body = {
-        #     "userId": body.get("user-id", ""),
-        #     "updates": {
-        #         "orderName": body.get("order-name", order_time),
-        #         "accountingCost": body.get("accounting-cost", 150)
-        #     }
-        # }
-        update_body = body
-
-        logoutBody = {
-            "refreshToken": orderRefreshToken
-        }
-
-        updateOrderResponse = requests.put(f"{ORDER_URL}/orders/{order_id}", json=update_body, headers=headers)
-        logoutResponse = requests.post(f"{ORDER_URL}/auth/logout", json=logoutBody, headers=headers)
-        return build_response(updateOrderResponse.status_code, JSON_TYPE, updateOrderResponse.json())
-
+        response = requests.get(f"{INVOICE_URL}/invoices/{invoice_id}", headers=HEADERS)
+        if response.status_code == 204:
+            return build_response(204, JSON_TYPE, {"message": "Invoice deleted successfully"})
+        return build_response(response.status_code, JSON_TYPE, response.json())
     except ClientError as e:
-        print('Error:', e)
         return build_response(503, JSON_TYPE, e.response['Error']['Message'])
+    
 
-def deleteOrder(order_id):
-    try:
-        loginBody = {
-            "email": UNSCATHED_EMAIL,
-            "password": UNSCATHED_PW
-        }
-        loginResponse = requests.post(f"{ORDER_URL}/auth/login", json=loginBody)
-        if loginResponse.status_code != 200:
-            return build_response(503, JSON_TYPE, loginResponse.json())
 
-        orderAccessToken = loginResponse.json()['accessToken']
-        orderRefreshToken = loginResponse.json()['refreshToken']
-        # body = event.get('body') or '{}'
 
-        authorization = "Bearer " + orderAccessToken
-        headers = {
-            "Authorization": authorization
-        }
 
-        logoutBody = {
-            "refreshToken": orderRefreshToken
-        }
 
-        # order_id = event['pathParameters'].get('order-id')
-        deleteOrderResponse = requests.delete(f"{ORDER_URL}/orders/{order_id}", headers=headers)
-        logoutResponse = requests.post(f"{ORDER_URL}/auth/logout", json=logoutBody, headers=headers)
-        return build_response(deleteOrderResponse.status_code, JSON_TYPE, deleteOrderResponse.json())
 
-    except ClientError as e:
-        print('Error:', e)
-        return build_response(503, JSON_TYPE, e.response['Error']['Message'])
+
+
+
