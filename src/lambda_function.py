@@ -4,7 +4,7 @@ from botocore.exceptions import ClientError
 
 # Import functions and constants that perform the core data processing
 from src.helper_functions import build_response
-from src.constants import JSON_TYPE, ORDER_URL
+from src.constants import JSON_TYPE, XML_TYPE, ORDER_URL
 from src.delete_despatch import delete_despatch
 from src.retrieve_despatch import retrieve_despatch
 from src.generate_despatch import generate_despatch
@@ -14,6 +14,7 @@ from src.auth_service import register, login, logout
 from src.auth_dependencies import get_auth_context
 from src.shopping_cart import addItemToShoppingCart, removeItemFromShoppingCart, updateItemInShoppingCart, retrieveShoppingCart, clearShoppingCart
 from src.order_api_handling import createOrder, retrieveOrderById, updateOrder, deleteOrder
+from src.validate_ubl import validate_order, validate_despatch, validate_invoice
 
 # Initialise URL constants
 BASE_URL = '/api/despatch'
@@ -127,6 +128,8 @@ def lambda_handler(event, context):
                 'headers': {'Content-Type': 'text/html'},
                 'body': swagger_ui()
             }
+
+        # Order routes
         elif http_method == 'POST' and path == '/api/cart/items':
             claims, blocked = _require_auth(event)
             if blocked:
@@ -189,6 +192,18 @@ def lambda_handler(event, context):
             else:
                 order_id = event['pathParameters'].get('order-id')
                 response = deleteOrder(order_id)
+
+        # Validation routes
+        elif http_method == 'POST' and path == '/api/validate/order':
+            body = event.get('body') or ''
+            response = validate_order(body)
+        elif http_method == 'POST' and path == '/api/validate/despatch':
+            body = event.get('body') or ''
+            response = validate_despatch(body)
+        elif http_method == 'POST' and path == '/api/validate/invoice':
+            body = event.get('body') or ''
+            response = validate_invoice(body)
+
         else:
             response = build_response(404, JSON_TYPE, 'Not Found')
 
