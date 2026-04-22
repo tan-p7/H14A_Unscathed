@@ -21,6 +21,23 @@ const tiers = [
         badge: null,
     },
     {
+        name: 'Starter',
+        price: '$9',
+        period: 'per month',
+        description: 'For small businesses ready to grow beyond the basics.',
+        features: [
+            'Up to 20 despatch advices per month',
+            'Up to 20 invoices per month',
+            '2 users',
+            'AU / NZ + Singapore standard',
+            'Email support',
+        ],
+        cta: 'Start 14-day Trial',
+        href: '/register',
+        highlight: false,
+        badge: null,
+    },
+    {
         name: 'Pro',
         price: '$29',
         period: 'per month',
@@ -38,25 +55,6 @@ const tiers = [
         highlight: true,
         badge: 'Most Popular',
     },
-    {
-        name: 'Enterprise',
-        price: 'Custom',
-        period: 'contact us',
-        description: 'For larger businesses with complex supply chains.',
-        features: [
-            'Unlimited everything',
-            'Unlimited users',
-            'All country standards',
-            'API access',
-            'Dedicated account manager',
-            'Custom integrations',
-            'SLA guarantee',
-        ],
-        cta: 'Contact Sales',
-        href: '/contact',
-        highlight: false,
-        badge: null,
-    },
 ]
 
 export default function Pricing() {
@@ -64,9 +62,19 @@ export default function Pricing() {
         <div className="min-h-screen flex flex-col">
             <Navbar />
 
+            <div className="bg-deep-sky-blue-600 py-5 px-6 text-center">
+                <p className="text-white text-sm font-semibold mb-1">Get 90% off your plan for your first 3 months when you buy by 30 April.</p>
+                <p className="text-deep-sky-blue-100 text-xs mb-3">Over 500 businesses use Atlas to manage their supply chain.</p>
+                <Link to="/register">
+                    <button className="bg-white text-deep-sky-blue-600 text-sm font-semibold px-5 py-2 rounded-lg hover:bg-deep-sky-blue-50 transition-colors">
+                        Claim offer
+                    </button>
+                </Link>
+            </div>
+
             <div className="flex-1 bg-gray-50 py-20 px-6 overflow-x-auto">
                 <div className="max-w-5xl mx-auto min-w-0">
-                    <div className="text-center mb-16">
+                    <div className="text-center mb-4">
                         <h1 className="text-4xl font-bold text-gray-900 mb-3">Pricing</h1>
                         <p className="text-gray-500">Start free. No hidden fees. Cancel anytime.</p>
                     </div>
@@ -126,8 +134,8 @@ export default function Pricing() {
                         ))}
                     </div>
 
-                    <div className="mt-12 text-center">
-                        <p className="text-gray-400 text-sm">All plans include a 14-day free trial. No credit card required to start.</p>
+                    <div className="mt-10 text-center">
+                        <p className="text-gray-400 text-sm">All paid plans include a 14-day free trial. No credit card required to start.</p>
                     </div>
                 </div>
             </div>
