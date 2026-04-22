@@ -67,6 +67,17 @@ function Login() {
             Sign up
           </span>
         </p>
+
+        <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '12px' }}>
+          By using Atlas, you agree to our{' '}
+          <span onClick={() => navigate('/terms')} style={{ cursor: 'pointer', color: '#2389a0' }}>
+            Terms
+          </span>{' '}
+          and{' '}
+          <span onClick={() => navigate('/privacy')} style={{ cursor: 'pointer', color: '#2389a0' }}>
+            Privacy Policy
+          </span>
+        </p>
       </div>
     </div>
   )
