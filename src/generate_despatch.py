@@ -292,7 +292,6 @@ def generate_despatch(order_xml_string, email_id: str):
                 ContentType="application/xml",
             )
 
-            email_address = _extract_email(event or {})
             src.db.dynamodb_table.put_item(
                 Item={
                     "email_address": email_id,
