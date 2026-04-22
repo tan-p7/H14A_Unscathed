@@ -7,8 +7,7 @@ export default function CustomerDashboardLayout({ children }) {
             <CustomerSidebar />
             <div className="flex flex-col flex-1 overflow-hidden">
                 <NavbarLoggedIn />
-                <main className="flex-1 overflow-y-auto p-8 bg-white">
-                    {children}
+            <main className="flex-1 overflow-y-auto p-8 bg-gray-100">                    {children}
                 </main>
             </div>
         </div>

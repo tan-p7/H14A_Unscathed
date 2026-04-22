@@ -13,10 +13,10 @@ export default function Landing() {
                     Now with multi-country e-invoicing compliance
                 </div>
                 <h1 className="text-5xl font-bold text-gray-900 max-w-3xl leading-tight mb-4">
-                    Supply chain management built for small business
+                    Supply chain management simplified.
                 </h1>
                 <p className="text-gray-500 max-w-xl text-lg mb-8">
-                    Generate despatch advices, create compliant e-invoices, and manage your orders — all in one place.
+                    Generate despatch advices, create compliant e-invoices, and manage your orders, all in one place.
                 </p>
                 <div className="flex flex-col items-center gap-4">
                     <div className="flex gap-3">

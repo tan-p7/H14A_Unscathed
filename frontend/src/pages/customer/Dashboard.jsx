@@ -15,7 +15,7 @@ export default function CustomerDashboard() {
             <h1 className="text-2xl font-bold mb-2">Hi, {name} 👋</h1>
             <p className="text-gray-500 mb-8">Here's a summary of your account.</p>
 
-            <div className="grid grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
                 <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                     <p className="text-gray-500 text-sm">My Orders</p>
                     <p className="text-3xl font-bold mt-2">8</p>
@@ -38,7 +38,7 @@ export default function CustomerDashboard() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-lg font-semibold">Recent Orders</h2>
@@ -46,7 +46,7 @@ export default function CustomerDashboard() {
                     </div>
                     <table className="w-full border-collapse">
                         <thead>
-                            <tr className="text-left text-gray-500 text-sm border-b border-gray-100">
+                            <tr className="text-left text-gray-600 text-sm border-b border-gray-200">
                                 <th className="pb-3">Order ID</th>
                                 <th className="pb-3">Date</th>
                                 <th className="pb-3">Status</th>
@@ -55,7 +55,7 @@ export default function CustomerDashboard() {
                         </thead>
                         <tbody>
                             {recentOrders.map((order, index) => (
-                                <tr key={index} className="border-b border-gray-50 hover:bg-gray-50">
+                                <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
                                     <td className="py-3 text-deep-sky-blue-600 text-sm">{order.id}</td>
                                     <td className="py-3 text-gray-500 text-sm">{order.date}</td>
                                     <td className="py-3">
@@ -72,9 +72,7 @@ export default function CustomerDashboard() {
                 </div>
 
                 <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-lg font-semibold">Quick Actions</h2>
-                    </div>
+                    <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
                     <div className="flex flex-col gap-3">
                         <Link to="/customer-create-order">
                             <button className="w-full bg-deep-sky-blue-600 text-white py-3 rounded-lg hover:bg-deep-sky-blue-700 text-sm font-medium">
