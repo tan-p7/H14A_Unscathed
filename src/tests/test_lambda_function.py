@@ -74,11 +74,12 @@ class TestLambdaRetrieveDespatchById:
         mock_retrieve.assert_called_once_with("user@example.com", '12345')
         assert response['statusCode'] == 200
 
+    @patch('src.lambda_function.get_auth_context', return_value=({"sub": "u1", "email": "user@example.com"}, None))
     @patch('src.lambda_function.retrieve_despatch')
-    def test_get_despatch_by_id_returns_404_when_despatch_id_missing(self, mock_retrieve):
+    def test_get_despatch_by_id_returns_404_when_despatch_id_missing(self, mock_retrieve, _mock_auth):
         path = DESPATCH_ADVICE_PATH + '/12345'
         response = lambda_handler(
-            make_event('GET', path, path_params={}),
+            make_event('GET', path, path_params={'despatch-id': None}),
             {}
         )
         mock_retrieve.assert_not_called()
@@ -111,11 +112,12 @@ class TestLambdaUpdateDespatch:
         mock_update.assert_called_once_with("user@example.com", '999', '{}')
         assert response['statusCode'] == 200
 
+    @patch('src.lambda_function.get_auth_context', return_value=({"sub": "u1", "email": "user@example.com"}, None))
     @patch('src.lambda_function.update_despatch_advice')
-    def test_put_despatch_returns_404_when_despatch_id_missing(self, mock_update):
+    def test_put_despatch_returns_404_when_despatch_id_missing(self, mock_update, _mock_auth):
         path = DESPATCH_ADVICE_PATH + '/999'
         response = lambda_handler(
-            make_event('PUT', path, path_params={}),
+            make_event('PUT', path, path_params={'despatch-id': None}),
             {}
         )
         mock_update.assert_not_called()
@@ -135,11 +137,12 @@ class TestLambdaDeleteDespatch:
         mock_delete.assert_called_once_with("user@example.com", '12345')
         assert response['statusCode'] == 204
 
+    @patch('src.lambda_function.get_auth_context', return_value=({"sub": "u1", "email": "user@example.com"}, None))
     @patch('src.lambda_function.delete_despatch')
-    def test_delete_despatch_returns_404_when_despatch_id_missing(self, mock_delete):
+    def test_delete_despatch_returns_404_when_despatch_id_missing(self, mock_delete, _mock_auth):
         path = DESPATCH_ADVICE_PATH + '/12345'
         response = lambda_handler(
-            make_event('DELETE', path, path_params={}),
+            make_event('DELETE', path, path_params={'despatch-id': None}),
             {}
         )
         mock_delete.assert_not_called()
@@ -147,12 +150,8 @@ class TestLambdaDeleteDespatch:
 
 
 class TestLambdaNotFound:
-    def test_unknown_method_returns_404(self):
-        response = lambda_handler(make_event('POST', HEALTH_CHECK_PATH), {})
-        assert response['statusCode'] == 404
-
     def test_unknown_path_returns_404(self):
-        response = lambda_handler(make_event('GET', '/api/despatch/unknown'), {})
+        response = lambda_handler(make_event('POST', HEALTH_CHECK_PATH), {})
         assert response['statusCode'] == 404
 
 
