@@ -19,6 +19,7 @@ distro @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/distro_
 elementpath==5.1.1
 frozendict @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/frozendict_1728605521897/work
 google-auth
+google-auth-oauthlib
 idna @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/idna_1728585920859/work
 iniconfig==2.3.0
 jsonpatch @ file:///Users/builder/cbouss/perseverance-python-buildout/croot/jsonpatch_1728594556110/work
