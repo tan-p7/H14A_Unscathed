@@ -29,6 +29,8 @@ export default function GenerateInvoice() {
     const [selectedStandard, setSelectedStandard] = useState(null)
     const [formatted, setFormatted] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [generatedXml, setGeneratedXml] = useState(null)
+    const [showRaw, setShowRaw] = useState(false)
 
     const year = new Date().getFullYear()
     const seq = String(Math.floor(Math.random() * 900) + 100)
@@ -91,6 +93,109 @@ export default function GenerateInvoice() {
     const total = subtotal + tax
     const canGenerate = invoiceNumber && issueDate && dueDate && unitPrice && parseFloat(unitPrice) > 0
 
+    const handleGenerate = () => {
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+    xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+    xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2">
+    <cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+    <cbc:CustomizationID>${standard?.standard}</cbc:CustomizationID>
+    <cbc:ProfileID>urn:fdc:peppol.eu:2017:poacc:billing:01:1.0</cbc:ProfileID>
+    <cbc:ID>${invoiceNumber}</cbc:ID>
+    <cbc:IssueDate>${issueDate}</cbc:IssueDate>
+    <cbc:DueDate>${dueDate}</cbc:DueDate>
+    <cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>
+    ${note ? `<cbc:Note>${note}</cbc:Note>` : ''}
+    <cbc:DocumentCurrencyCode>${currency}</cbc:DocumentCurrencyCode>
+    <cac:OrderReference>
+        <cbc:ID>${formatted?.orderRef || ''}</cbc:ID>
+    </cac:OrderReference>
+    <cac:DespatchDocumentReference>
+        <cbc:ID>${id}</cbc:ID>
+    </cac:DespatchDocumentReference>
+    <cac:AccountingSupplierParty>
+        <cac:Party>
+            <cac:PartyName>
+                <cbc:Name>${formatted?.supplier || ''}</cbc:Name>
+            </cac:PartyName>
+            <cac:PostalAddress>
+                <cbc:StreetName>${formatted?.street || ''}</cbc:StreetName>
+                <cbc:CityName>${formatted?.city || ''}</cbc:CityName>
+                <cbc:PostalZone>${formatted?.postal || ''}</cbc:PostalZone>
+                <cac:Country>
+                    <cbc:IdentificationCode>${selectedStandard}</cbc:IdentificationCode>
+                </cac:Country>
+            </cac:PostalAddress>
+        </cac:Party>
+    </cac:AccountingSupplierParty>
+    <cac:AccountingCustomerParty>
+        <cac:Party>
+            <cac:PartyName>
+                <cbc:Name>${formatted?.customer || ''}</cbc:Name>
+            </cac:PartyName>
+        </cac:Party>
+    </cac:AccountingCustomerParty>
+    <cac:PaymentMeans>
+        <cbc:PaymentMeansCode>30</cbc:PaymentMeansCode>
+        <cbc:PaymentDueDate>${dueDate}</cbc:PaymentDueDate>
+        <cac:PayeeFinancialAccount>
+            <cbc:ID>${bankAccount}</cbc:ID>
+            <cac:FinancialInstitutionBranch>
+                <cbc:ID>${bsb}</cbc:ID>
+            </cac:FinancialInstitutionBranch>
+        </cac:PayeeFinancialAccount>
+    </cac:PaymentMeans>
+    <cac:PaymentTerms>
+        <cbc:Note>${paymentTerms}</cbc:Note>
+    </cac:PaymentTerms>
+    <cac:TaxTotal>
+        <cbc:TaxAmount currencyID="${currency}">${tax.toFixed(2)}</cbc:TaxAmount>
+        <cac:TaxSubtotal>
+            <cbc:TaxableAmount currencyID="${currency}">${subtotal.toFixed(2)}</cbc:TaxableAmount>
+            <cbc:TaxAmount currencyID="${currency}">${tax.toFixed(2)}</cbc:TaxAmount>
+            <cac:TaxCategory>
+                <cbc:ID>S</cbc:ID>
+                <cbc:Percent>${taxRate}</cbc:Percent>
+                <cac:TaxScheme>
+                    <cbc:ID>${taxScheme}</cbc:ID>
+                </cac:TaxScheme>
+            </cac:TaxCategory>
+        </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:LegalMonetaryTotal>
+        <cbc:LineExtensionAmount currencyID="${currency}">${subtotal.toFixed(2)}</cbc:LineExtensionAmount>
+        <cbc:TaxExclusiveAmount currencyID="${currency}">${subtotal.toFixed(2)}</cbc:TaxExclusiveAmount>
+        <cbc:TaxInclusiveAmount currencyID="${currency}">${total.toFixed(2)}</cbc:TaxInclusiveAmount>
+        <cbc:PayableAmount currencyID="${currency}">${total.toFixed(2)}</cbc:PayableAmount>
+    </cac:LegalMonetaryTotal>
+    <cac:InvoiceLine>
+        <cbc:ID>1</cbc:ID>
+        <cbc:InvoicedQuantity unitCode="EA">${qty}</cbc:InvoicedQuantity>
+        <cbc:LineExtensionAmount currencyID="${currency}">${subtotal.toFixed(2)}</cbc:LineExtensionAmount>
+        <cac:Item>
+            <cbc:Description>Supply of goods from ${formatted?.supplier || 'Supplier'} - Order ${formatted?.orderRef || id}</cbc:Description>
+            <cbc:Name>Order ${formatted?.orderRef || id}</cbc:Name>
+        </cac:Item>
+        <cac:Price>
+            <cbc:PriceAmount currencyID="${currency}">${parseFloat(unitPrice).toFixed(2)}</cbc:PriceAmount>
+        </cac:Price>
+    </cac:InvoiceLine>
+</Invoice>`
+
+        setGeneratedXml(xml)
+        setStep(3)
+    }
+
+    const downloadXml = () => {
+        const blob = new Blob([generatedXml], { type: 'application/xml' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${invoiceNumber}.xml`
+        a.click()
+        URL.revokeObjectURL(url)
+    }
+
     return (
         <SellerDashboardLayout>
             <div className="mb-8">
@@ -99,7 +204,7 @@ export default function GenerateInvoice() {
             </div>
 
             <div className="flex items-center gap-2 mb-8">
-                {['Select Standard', 'Invoice Details', 'Review & Download'].map((label, index) => (
+                {['Select Standard', 'Invoice Details', 'Review & Submit'].map((label, index) => (
                     <div key={index} className="flex items-center gap-2">
                         <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-medium ${stepClass(index)}`}>
                             {step > index + 1 ? '✓' : index + 1}
@@ -115,7 +220,7 @@ export default function GenerateInvoice() {
             ) : (
                 <>
                     {step === 1 && (
-                        <div className="flex gap-8">
+                        <div className="max-w-2xl">
                             <div className="flex-1">
                                 <p className="text-gray-500 mb-4">Select the e-invoicing standard for the destination country.</p>
                                 <div className="flex flex-col gap-3">
@@ -149,58 +254,11 @@ export default function GenerateInvoice() {
                                 </div>
                             </div>
 
-                            <div className="w-72 flex-shrink-0">
-                                <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm sticky top-6">
-                                    <h3 className="font-semibold text-gray-800 mb-4">Despatch Details</h3>
-                                    {formatted ? (
-                                        <div className="flex flex-col gap-3 text-sm">
-                                            <div>
-                                                <p className="text-xs text-gray-400">Despatch ID</p>
-                                                <p className="font-medium">{id}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-400">Order Reference</p>
-                                                <p className="font-medium">{formatted.orderRef || '-'}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-400">Supplier</p>
-                                                <p className="font-medium">{formatted.supplier || '-'}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-400">Customer</p>
-                                                <p className="font-medium">{formatted.customer || '-'}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-400">Quantity</p>
-                                                <p className="font-medium">{formatted.quantity}</p>
-                                            </div>
-                                            {selectedStandard && (
-                                                <>
-                                                    <div className="border-t border-gray-100 pt-3">
-                                                        <p className="text-xs text-gray-400">Selected Standard</p>
-                                                        <p className="font-medium text-deep-sky-blue-600">{standard?.standard}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs text-gray-400">Currency</p>
-                                                        <p className="font-medium">{CURRENCY_BY_COUNTRY[selectedStandard]}</p>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-xs text-gray-400">Tax Scheme</p>
-                                                        <p className="font-medium">{TAX_SCHEME_BY_COUNTRY[selectedStandard]}</p>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <p className="text-gray-400 text-sm">Loading...</p>
-                                    )}
-                                </div>
-                            </div>
                         </div>
                     )}
 
                     {step === 2 && (
-                        <div className="flex gap-8">
+                        <div className="max-w-2xl">
                             <div className="flex-1 flex flex-col gap-6">
                                 <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                                     <h2 className="text-lg font-semibold mb-4">Invoice Details</h2>
@@ -259,7 +317,7 @@ export default function GenerateInvoice() {
                                 <div className="flex justify-between">
                                     <button onClick={() => setStep(1)} className="border border-gray-300 text-gray-600 px-6 py-2 rounded-lg hover:bg-gray-50">← Back</button>
                                     <button
-                                        onClick={() => setStep(3)}
+                                        onClick={handleGenerate}
                                         disabled={!canGenerate}
                                         className="bg-deep-sky-blue-600 text-white px-6 py-2 rounded-lg hover:bg-deep-sky-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
@@ -268,48 +326,66 @@ export default function GenerateInvoice() {
                                 </div>
                             </div>
 
-                            <div className="w-72 flex-shrink-0">
-                                <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm sticky top-6">
-                                    <h3 className="font-semibold text-gray-800 mb-4">Order Summary</h3>
-                                    <div className="flex flex-col gap-3 text-sm">
-                                        <div>
-                                            <p className="text-xs text-gray-400">Standard</p>
-                                            <p className="font-medium text-deep-sky-blue-600">{standard?.standard}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-gray-400">Customer</p>
-                                            <p className="font-medium">{formatted?.customer || '-'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-gray-400">Quantity</p>
-                                            <p className="font-medium">{qty}</p>
-                                        </div>
-                                        {unitPrice && parseFloat(unitPrice) > 0 && (
-                                            <>
-                                                <div className="border-t border-gray-100 pt-3">
-                                                    <div className="flex justify-between text-gray-500">
-                                                        <span>Subtotal</span>
-                                                        <span>{currency} {subtotal.toFixed(2)}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex justify-between text-gray-500">
-                                                    <span>{taxScheme} ({taxRate}%)</span>
-                                                    <span>{currency} {tax.toFixed(2)}</span>
-                                                </div>
-                                                <div className="flex justify-between font-semibold text-gray-800 pt-1 border-t border-gray-100">
-                                                    <span>Total</span>
-                                                    <span>{currency} {total.toFixed(2)}</span>
-                                                </div>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     )}
 
                     {step === 3 && (
-                        <p className="text-gray-400">Review coming soon...</p>
+                        <div className="max-w-2xl">
+                            <div className="flex-1 flex flex-col gap-6">
+                                <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+                                    <span className="text-green-600 text-xl">✓</span>
+                                    <div>
+                                        <p className="font-medium text-green-700">Invoice Generated</p>
+                                        <p className="text-sm text-green-600">{invoiceNumber} - {standard?.standard} - {currency} {total.toFixed(2)}</p>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h2 className="text-lg font-semibold">Invoice Document</h2>
+                                        <div className="flex gap-3">
+                                            <button onClick={() => setShowRaw(!showRaw)} className="text-sm border border-gray-300 px-4 py-1 rounded-md hover:bg-gray-50">
+                                                {showRaw ? 'View Formatted' : 'View Raw XML'}
+                                            </button>
+                                            <button onClick={downloadXml} className="bg-deep-sky-blue-600 text-white text-sm px-4 py-1 rounded-md hover:bg-deep-sky-blue-700">
+                                                Download XML
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {showRaw ? (
+                                        <pre className="bg-gray-50 border border-gray-100 rounded-lg p-4 text-sm overflow-auto max-h-96">
+                                            {generatedXml}
+                                        </pre>
+                                    ) : (
+                                        <div className="bg-gray-50 border border-gray-100 rounded-lg p-4 text-sm flex flex-col gap-2">
+                                            <p><span className="text-gray-500 font-medium">Invoice Number:</span> {invoiceNumber}</p>
+                                            <p><span className="text-gray-500 font-medium">Standard:</span> {standard?.standard}</p>
+                                            <p><span className="text-gray-500 font-medium">Issue Date:</span> {issueDate}</p>
+                                            <p><span className="text-gray-500 font-medium">Due Date:</span> {dueDate}</p>
+                                            <p><span className="text-gray-500 font-medium">Supplier:</span> {formatted?.supplier}</p>
+                                            <p><span className="text-gray-500 font-medium">Customer:</span> {formatted?.customer}</p>
+                                            <p><span className="text-gray-500 font-medium">Order Reference:</span> {formatted?.orderRef}</p>
+                                            <p><span className="text-gray-500 font-medium">Despatch Reference:</span> {id}</p>
+                                            <p><span className="text-gray-500 font-medium">Quantity:</span> {qty}</p>
+                                            <p><span className="text-gray-500 font-medium">Unit Price:</span> {currency} {parseFloat(unitPrice).toFixed(2)}</p>
+                                            <p><span className="text-gray-500 font-medium">Subtotal:</span> {currency} {subtotal.toFixed(2)}</p>
+                                            <p><span className="text-gray-500 font-medium">{taxScheme} ({taxRate}%):</span> {currency} {tax.toFixed(2)}</p>
+                                            <p><span className="text-gray-500 font-medium">Total:</span> {currency} {total.toFixed(2)}</p>
+                                            <p><span className="text-gray-500 font-medium">Payment Terms:</span> {paymentTerms}</p>
+                                            {bankAccount && <p><span className="text-gray-500 font-medium">Bank Account:</span> {bankAccount}</p>}
+                                            {bsb && <p><span className="text-gray-500 font-medium">BSB:</span> {bsb}</p>}
+                                            {note && <p><span className="text-gray-500 font-medium">Note:</span> {note}</p>}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="flex justify-between">
+                                    <button onClick={() => setStep(2)} className="border border-gray-300 text-gray-600 px-6 py-2 rounded-lg hover:bg-gray-50">← Back</button>
+                                    <button onClick={() => navigate('/despatch')} className="bg-deep-sky-blue-600 text-white px-6 py-2 rounded-lg hover:bg-deep-sky-blue-700">Done</button>
+                                </div>
+                            </div>
+
+                        </div>
                     )}
                 </>
             )}
