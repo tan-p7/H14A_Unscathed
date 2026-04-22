@@ -4,7 +4,7 @@ from botocore.exceptions import ClientError
 
 # Import functions and constants that perform the core data processing
 from src.helper_functions import build_response
-from src.constants import JSON_TYPE
+from src.constants import JSON_TYPE, ORDER_URL
 from src.delete_despatch import delete_despatch
 from src.retrieve_despatch import retrieve_despatch
 from src.generate_despatch import generate_despatch
@@ -12,6 +12,8 @@ from src.retrieve_all_despatch import retrieve_all_despatch_advice
 from src.update_despatch import update_despatch_advice
 from src.auth_service import register, login, logout
 from src.auth_dependencies import get_auth_context
+from src.shopping_cart import addItemToShoppingCart, removeItemFromShoppingCart, updateItemInShoppingCart, retrieveShoppingCart, clearShoppingCart
+from src.order_handling import createOrder, retrieveOrderById, updateOrder, deleteOrder
 
 # Initialise URL constants
 BASE_URL = '/api/despatch'
@@ -125,6 +127,68 @@ def lambda_handler(event, context):
                 'headers': {'Content-Type': 'text/html'},
                 'body': swagger_ui()
             }
+        elif http_method == 'POST' and path == '/api/cart/items':
+            claims, blocked = _require_auth(event)
+            if blocked:
+                response = blocked
+            else:
+                body = event.get('body') or '{}'
+                response = addItemToShoppingCart(body)
+        elif http_method == 'DELETE' and path.startsWith('/api/cart/items/'):
+            claims, blocked = _require_auth(event)
+            if blocked:
+                response = blocked
+            else:
+                item_id = event['pathParameters'].get('item-id')
+                response = removeItemFromShoppingCart(item_id)
+        elif http_method == 'PUT' and path.startsWith('/api/cart/items/'):
+            claims, blocked = _require_auth(event)
+            if blocked:
+                response = blocked
+            else:
+                item_id = event['pathParameters'].get('item-id')
+                quantity = (body.get("quantity", ""))
+                response = updateItemInShoppingCart(item_id, quantity)
+        elif http_method == 'GET' and path == '/api/cart':
+            claims, blocked = _require_auth(event)
+            if blocked:
+                response = blocked
+            else:
+                response = retrieveShoppingCart()
+        elif http_method == 'DELETE' and path == '/api/cart':
+            claims, blocked = _require_auth(event)
+            if blocked:
+                response = blocked
+            else:
+                response = clearShoppingCart()
+        elif http_method == 'POST' and path == '/api/order':
+            claims, blocked = _require_auth(event)
+            if blocked:
+                response = blocked
+            else:
+                response = createOrder()
+        elif http_method == 'GET' and path.startsWith('/api/order/'):
+            claims, blocked = _require_auth(event)
+            if blocked:
+                response = blocked
+            else:
+                order_id = event['pathParameters'].get('order-id')
+                response = retrieveOrderById(order_id)
+        elif http_method == 'PUT' and path.startsWith('/api/order/'):
+            claims, blocked = _require_auth(event)
+            if blocked:
+                response = blocked
+            else:
+                body = event.get('body') or '{}'
+                order_id = event['pathParameters'].get('order-id')
+                response = updateOrder(order_id, body)
+        elif http_method == 'DELETE' and path.startsWith('/api/order/'):
+            claims, blocked = _require_auth(event)
+            if blocked:
+                response = blocked
+            else:
+                order_id = event['pathParameters'].get('order-id')
+                response = deleteOrder(order_id)
         else:
             response = build_response(404, JSON_TYPE, 'Not Found')
 
