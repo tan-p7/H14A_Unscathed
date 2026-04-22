@@ -4,13 +4,10 @@ import requests
 import json
 from datetime import datetime
 import xml.etree.ElementTree as ET
-# Import helper function and constants to build the JSON response
 from src.helper_functions import build_response
 from src.constants import JSON_TYPE, XML_TYPE, INVOICE_URL, INVOICE_API_KEY
 
-HEADERS = {"X-API-Key": {INVOICE_API_KEY}}
-
-
+HEADERS = {"X-API-Key": INVOICE_API_KEY}
 
 def createInvoice():
     try:
@@ -39,7 +36,7 @@ def createInvoice():
             ]
         }
     
-        response = requests.post(f"{INVOICE_URL}/invoices", json=invoice_info, headers=HEADERS)
+        response = requests.post(f"{INVOICE_URL}/v1/invoices", json=invoice_info, headers=HEADERS)
         return build_response(response.status_code, JSON_TYPE, response.json())
     except ClientError as e:
         return build_response(503, JSON_TYPE, e.response['Error']['Message'])
@@ -48,7 +45,7 @@ def createInvoice():
 
 def retrieveInvoiceById(invoice_id):
     try:
-        response = requests.get(f"{INVOICE_URL}/invoices/{invoice_id}", headers=HEADERS)
+        response = requests.get(f"{INVOICE_URL}/v1/invoices/{invoice_id}", headers=HEADERS)
         return build_response(response.status_code, JSON_TYPE, response.json())
     except ClientError as e:
         return build_response(503, JSON_TYPE, e.response['Error']['Message'])
@@ -59,7 +56,7 @@ def updateInvoiceById(invoice_id):
         update_info = {
             "order_reference": "ORD-UPDATED",
             "issue_date": datetime.now().strftime("%Y-%m-%d"),
-            "due_date": "2026-03-28",
+            "due_date": "2026-07-28",
             "currency": "AUD",
             "supplier": {
                 "name": "Updated Supplier",
@@ -79,7 +76,7 @@ def updateInvoiceById(invoice_id):
                 }
             ]
         }   
-        response = requests.put(f"{INVOICE_URL}/invoices/{invoice_id}", json=update_info, headers=HEADERS)
+        response = requests.put(f"{INVOICE_URL}/v1/invoices/{invoice_id}", json=update_info, headers=HEADERS)
         return build_response(response.status_code, JSON_TYPE, response.json())
     except ClientError as e:
         return build_response(503, JSON_TYPE, e.response['Error']['Message'])
@@ -87,13 +84,23 @@ def updateInvoiceById(invoice_id):
 
 def deleteInvoiceById(invoice_id):
     try:
-        response = requests.get(f"{INVOICE_URL}/invoices/{invoice_id}", headers=HEADERS)
+        response = requests.get(f"{INVOICE_URL}/v1/invoices/{invoice_id}", headers=HEADERS)
         if response.status_code == 204:
             return build_response(204, JSON_TYPE, {"message": "Invoice deleted successfully"})
         return build_response(response.status_code, JSON_TYPE, response.json())
     except ClientError as e:
         return build_response(503, JSON_TYPE, e.response['Error']['Message'])
     
+def InvoiceStatus(invoice_id):
+    try:
+        status_info = {
+            "status": "sent"
+        }
+        response = requests.post(f"{INVOICE_URL}/v1/invoices/{invoice_id}/status", json=status_info, headers=HEADERS)
+        return build_response(response.status_code, JSON_TYPE, response.json())
+    except ClientError as e:
+        return build_response(503, JSON_TYPE, e.response['Error']['Message'])
+
 
 
 def createCreditNote(invoice_id):
@@ -101,12 +108,18 @@ def createCreditNote(invoice_id):
         credit_note_info = {
             "reason": "Customer order cancelled after invoicing"
         }
-        response = requests.post(f"{INVOICE_URL}/invoices/{invoice_id}/credit-notes", json=credit_note_info, headers=HEADERS)
+        response = requests.post(f"{INVOICE_URL}/v1/invoices/{invoice_id}/credit-note", json=credit_note_info, headers=HEADERS)
         return build_response(response.status_code, JSON_TYPE, response.json())
     except ClientError as e:
         return build_response(503, JSON_TYPE, e.response['Error']['Message'])
 
 
+def InvoiceToPdf(invoice_id):
+    try:
+        response = requests.get(f"{INVOICE_URL}/v1/invoices/{invoice_id}/pdf", headers=HEADERS)
+        return {"statusCode": response.status_code, "body": response.content}
+    except ClientError as e:
+        return build_response(503, JSON_TYPE, e.response['Error']['Message'])
 
 
 

@@ -5,15 +5,5 @@ XML_TYPE = 'application/xml'
 
 
 
-
-
-
-
-
-response = requests.post("https://lastminutepush.one/auth/register", json ={
-    "groupName": "unscathed"
-
-}) 
-
-INVOICE_URL = "https://lastminutepush.one/"
-INVOICE_API_KEY = response.json()['apiKey']
+INVOICE_URL = "https://lastminutepush.one"
+INVOICE_API_KEY = "tmk_09b8dbc26646f51b3c4a04fbcc8822b0774c89444720137e"
