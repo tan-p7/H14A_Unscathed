@@ -7,6 +7,8 @@ export default function Despatch() {
     const [search, setSearch] = useState('')
     const [filter, setFilter] = useState('All')
     const [loading, setLoading] = useState(true)
+    const [selected, setSelected] = useState([])
+    const [showConfirm, setShowConfirm] = useState(false)
 
     useEffect(() => {
         const fetchDespatches = async () => {
@@ -47,16 +49,77 @@ export default function Despatch() {
         .filter(d => filter === 'All' || d.status === filter)
         .filter(d => d.id.toLowerCase().includes(search.toLowerCase()) || d.orderId.toLowerCase().includes(search.toLowerCase()))
 
+    const toggleSelect = (id) => {
+        setSelected(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        )
+    }
+
+    const toggleSelectAll = () => {
+        setSelected(prev =>
+            prev.length === filteredDespatch.length ? [] : filteredDespatch.map(d => d.id)
+        )
+    }
+
+    const handleDeleteSelected = async () => {
+        const token = localStorage.getItem('accessToken')
+        await Promise.all(selected.map(id =>
+            fetch(`/atlas/api/despatch/despatch-advice/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+        ))
+
+        setDespatchList(prev => prev.filter(d => !selected.includes(d.id)))
+        setSelected([])
+        setShowConfirm(false)
+    }
+
     return (
         <DashboardLayout>
             <div className="flex flex-col h-full">
+
+                {/* Confirm delete despatch notification */}
+                {showConfirm && (
+                    <div className="fixed inset-0 backdrop-blur-[1px] flex items-center justify-center z-50">
+                        <div className="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full">
+                            <h2 className="text-lg font-semibold mb-2">Delete Despatch Advice</h2>
+                            <p className="text-gray-500 text-sm mb-6">Are you sure you want to delete {selected.length} despatch advice(s)? This action cannot be undone.</p>
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={() => setShowConfirm(false)}
+                                    className="border border-gray-300 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-50 text-sm"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleDeleteSelected}
+                                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 text-sm"
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div className="flex justify-between items-center mb-4">
                     <h1 className="text-2xl font-bold">Despatch Advice</h1>
-                    <Link to="/create-despatch">
-                        <button className="bg-deep-sky-blue-600 text-white px-4 py-2 rounded-lg hover:bg-deep-sky-blue-700">
-                            + Create Despatch
-                        </button>
-                    </Link>
+                    <div className="flex gap-3">
+                        {selected.length > 0 && (
+                            <button
+                                onClick={() => setShowConfirm(true)}
+                                className="border border-red-300 text-red-500 px-4 py-2 rounded-lg hover:bg-red-500 hover:text-white text-sm transition-colors duration-100"
+                            >
+                                Delete ({selected.length})
+                            </button>
+                        )}
+                        <Link to="/create-despatch">
+                            <button className="bg-deep-sky-blue-600 text-white px-4 py-2 rounded-lg hover:bg-deep-sky-blue-700">
+                                + Create Despatch
+                            </button>
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="flex gap-4 mb-4">
@@ -84,6 +147,14 @@ export default function Despatch() {
                     <table className="w-full border-collapse">
                         <thead className="sticky top-0 bg-gray-50">
                             <tr className="text-left text-gray-500 text-sm">
+                                <th className="px-4 py-3 border-b border-gray-100 w-10">
+                                    <input
+                                        type="checkbox"
+                                        checked={filteredDespatch.length > 0 && selected.length === filteredDespatch.length}
+                                        onChange={toggleSelectAll}
+                                        className="w-4 h-4"
+                                    />
+                                </th>
                                 <th className="px-4 py-3 border-b border-gray-100">Despatch ID</th>
                                 <th className="px-4 py-3 border-b border-gray-100">Order ID</th>
                                 <th className="px-4 py-3 border-b border-gray-100">Date</th>
@@ -93,15 +164,23 @@ export default function Despatch() {
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan="4" className="px-4 py-8 text-center text-gray-400">Loading...</td>
+                                    <td colSpan="5" className="px-4 py-8 text-center text-gray-400">Loading...</td>
                                 </tr>
                             ) : filteredDespatch.length === 0 ? (
                                 <tr>
-                                    <td colSpan="4" className="px-4 py-8 text-center text-gray-400">No despatch advices found.</td>
+                                    <td colSpan="5" className="px-4 py-8 text-center text-gray-400">No despatch advices found.</td>
                                 </tr>
                             ) : (
                                 filteredDespatch.map((d, index) => (
-                                    <tr key={index} className="hover:bg-gray-50 border-b border-gray-100">
+                                    <tr key={index} className={`hover:bg-gray-50 border-b border-gray-100 ${selected.includes(d.id) ? 'bg-blue-50' : ''}`}>
+                                        <td className="px-4 py-3">
+                                            <input
+                                                type="checkbox"
+                                                checked={selected.includes(d.id)}
+                                                onChange={() => toggleSelect(d.id)}
+                                                className="w-4 h-4"
+                                            />
+                                        </td>
                                         <td className="px-4 py-3 text-deep-sky-blue-600"><Link to={`/despatch/${d.id}`}>{d.id}</Link></td>
                                         <td className="px-4 py-3">{d.orderId}</td>
                                         <td className="px-4 py-3 text-gray-500">{d.date}</td>
