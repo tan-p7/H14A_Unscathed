@@ -6,7 +6,6 @@ export default function NavbarLoggedIn({ dark = false }) {
     const [dropdownOpen, setDropdownOpen] = useState(false)
 
     const token = localStorage.getItem('accessToken')
-    const roles = JSON.parse(localStorage.getItem('roles') || '["customer"]')
     const activeRole = localStorage.getItem('activeRole') || 'customer'
 
     let email = ''
@@ -19,35 +18,12 @@ export default function NavbarLoggedIn({ dark = false }) {
         navigate('/login')
     }
 
-    const switchRole = () => {
-        const newRole = activeRole === 'seller' ? 'customer' : 'seller'
-        localStorage.setItem('activeRole', newRole)
-        if (newRole === 'seller') {
-            navigate('/dashboard')
-        } else {
-            navigate('/customer-dashboard')
-        }
-    }
-
     const initials = email ? email[0].toUpperCase() : '?'
-    const hasBothRoles = roles.includes('customer') && roles.includes('seller')
 
     return (
         <div className={`flex items-center justify-between px-6 py-3 border-b ${dark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
             <span className={`font-conthrax text-xl ${dark ? 'text-white' : 'text-deep-sky-blue-600'}`}>Atlas</span>
             <div className="flex items-center gap-4">
-                {hasBothRoles && (
-                    <button
-                        onClick={switchRole}
-                        className={`flex items-center gap-2 border px-3 py-1 rounded-lg text-sm transition-colors ${
-                            dark
-                                ? 'border-gray-500 text-gray-300 hover:bg-gray-700'
-                                : 'border-deep-sky-blue-300 text-deep-sky-blue-600 hover:bg-deep-sky-blue-50'
-                        }`}
-                    >
-                        <span>Switch to {activeRole === 'seller' ? 'Customer' : 'Seller'}</span>
-                    </button>
-                )}
                 <div className="relative">
                     <button
                         onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -56,7 +32,9 @@ export default function NavbarLoggedIn({ dark = false }) {
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium text-white ${dark ? 'bg-gray-600' : 'bg-deep-sky-blue-600'}`}>
                             {initials}
                         </div>
-                        <span className={`text-sm ${dark ? 'text-gray-300' : 'text-gray-600'}`}>{email}</span>
+                        <span className={`text-sm ${dark ? 'text-gray-300' : 'text-gray-600'}`}>
+                            Hi, {localStorage.getItem('name') || email}
+                        </span>
                     </button>
                     {dropdownOpen && (
                         <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50">

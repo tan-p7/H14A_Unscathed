@@ -24,15 +24,12 @@ export default function Login() {
         if (response.status === 200) {
             localStorage.removeItem('token')
             localStorage.setItem('accessToken', data.accessToken)
+            localStorage.setItem('name', data.name || '')
             const roles = data.roles || ['customer']
             localStorage.setItem('roles', JSON.stringify(roles))
             const activeRole = roles.includes('seller') ? 'seller' : 'customer'
             localStorage.setItem('activeRole', activeRole)
-            if (activeRole === 'seller') {
-                navigate('/dashboard')
-            } else {
-                navigate('/customer-dashboard')
-            }
+            navigate('/dashboard')
         } else {
             setError('Invalid email or password')
         }
