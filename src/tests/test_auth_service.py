@@ -66,7 +66,7 @@ class TestRegister:
         mock_create.assert_called_once()
         args = mock_create.call_args[0]
         assert args[1] == "new@b.com"  # normalized
-        body = json.loads(r["body"])
+        body = r["body"]
         assert body["email"] == "new@b.com"
         assert body["name"] == "User"
         assert "userId" in body
@@ -106,7 +106,7 @@ class TestLogin:
         with patch("src.auth_service.users_db.get_user_by_email", return_value=user):
             r = login(_event({"email": "a@b.com", "password": "mypassword"}))
         assert r["statusCode"] == 200
-        body = json.loads(r["body"])
+        body = r["body"]
         assert body["tokenType"] == "Bearer"
         assert "accessToken" in body
         assert body["expiresIn"] > 0
