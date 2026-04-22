@@ -13,7 +13,7 @@ from src.update_despatch import update_despatch_advice
 from src.auth_service import register, login, logout
 from src.auth_dependencies import get_auth_context
 from src.shopping_cart import addItemToShoppingCart, removeItemFromShoppingCart, updateItemInShoppingCart, retrieveShoppingCart, clearShoppingCart
-from src.order_handling import createOrder, retrieveOrderById, updateOrder, deleteOrder
+from src.order_api_handling import createOrder, retrieveOrderById, updateOrder, deleteOrder
 from src.validate_ubl import validate_order, validate_despatch
 
 # Initialise URL constants
