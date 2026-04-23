@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import DashboardLayout from '../../components/seller/SellerDashboardLayout'
-import { useNavigate } from 'react-router-dom'
 import SellerDashboardLayout from '../../components/seller/SellerDashboardLayout'
+import { useNavigate } from 'react-router-dom'
 
 export default function CreateDespatch() {
     const navigate = useNavigate()
@@ -30,6 +29,11 @@ export default function CreateDespatch() {
     const [hoverManual, setHoverManual] = useState(false)
     const fileInputRef = useRef(null)
 
+    // Order picker state
+    const [orderList, setOrderList] = useState([])
+    const [orderLoading, setOrderLoading] = useState(false)
+    const [selectedOrderId, setSelectedOrderId] = useState(null)
+
     useEffect(() => {
         if (mode === 'upload' && fileInputRef.current) {
             fileInputRef.current.click()
@@ -48,27 +52,83 @@ export default function CreateDespatch() {
             }
             fetchNextId()
         }
+        if (mode === 'select') {
+            setOrderLoading(true)
+            const fetchOrders = async () => {
+                const token = localStorage.getItem('accessToken')
+                try {
+                    const response = await fetch('/atlas/api/order/order', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                    if (!response.ok) { setOrderLoading(false); return }
+                    const data = await response.json()
+                    setOrderList(data.map(o => ({
+                        id: o.order_id,
+                        buyer: o.buyer,
+                        seller: o.seller,
+                        date: o.issue_date,
+                        total: o.total,
+                        currency: o.currency
+                    })))
+                } catch { } finally {
+                    setOrderLoading(false)
+                }
+            }
+            fetchOrders()
+        }
     }, [mode])
+
+    const handleSelectOrder = async (order) => {
+        setSelectedOrderId(order.id)
+        const token = localStorage.getItem('accessToken')
+
+        // Fetch the full XML for this order
+        const response = await fetch(`/atlas/api/order/order/${order.id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (!response.ok) return
+        const xmlText = await response.text()
+
+        // Parse it
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(xmlText, 'application/xml')
+        const getNS = (tag) => doc.getElementsByTagNameNS('urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2', tag)[0]?.textContent || ''
+
+        const sellerParty = doc.getElementsByTagNameNS('urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2', 'SellerSupplierParty')[0]
+        const buyerParty = doc.getElementsByTagNameNS('urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2', 'BuyerCustomerParty')[0]
+        const sellerName = sellerParty?.getElementsByTagNameNS('urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2', 'Name')[0]?.textContent || ''
+        const buyerName = buyerParty?.getElementsByTagNameNS('urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2', 'Name')[0]?.textContent || ''
+
+        setOrderRefId(order.id)
+        setSupplierPartyName(sellerName || 'Atlas')
+        setCustomerPartyName(buyerName)
+        setStreetName(getNS('StreetName'))
+        setCityName(getNS('CityName'))
+        setPostalZone(getNS('PostalZone'))
+        setCountry(getNS('IdentificationCode'))
+
+        // Get next despatch ID
+        const res = await fetch('/atlas/api/despatch/next-id', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        const data = await res.json()
+        setDocId(data.nextId)
+        setUploadedAndParsed(true)
+    }
 
     const handleFileUpload = async (event) => {
         const uploadedFile = event.target.files[0]
         if (!uploadedFile) return
-
         setFile(uploadedFile)
         setHoverUpload(false)
-
         const xmlText = await uploadedFile.text()
         const parser = new DOMParser()
         const doc = parser.parseFromString(xmlText, 'application/xml')
-
         const getNS = (tag) => doc.getElementsByTagNameNS('urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2', tag)[0]?.textContent || ''
-
         const sellerParty = doc.getElementsByTagName('cac:SellerSupplierParty')[0] || doc.getElementsByTagNameNS('urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2', 'SellerSupplierParty')[0]
         const buyerParty = doc.getElementsByTagName('cac:BuyerCustomerParty')[0] || doc.getElementsByTagNameNS('urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2', 'BuyerCustomerParty')[0]
-
         const sellerName = sellerParty?.getElementsByTagName('cbc:Name')[0]?.textContent || sellerParty?.getElementsByTagNameNS('urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2', 'Name')[0]?.textContent || ''
         const buyerName = buyerParty?.getElementsByTagName('cbc:Name')[0]?.textContent || buyerParty?.getElementsByTagNameNS('urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2', 'Name')[0]?.textContent || ''
-
         setOrderRefId(getNS('ID'))
         if (getNS('IssueDate')) setIssueDate(getNS('IssueDate'))
         setSupplierPartyName(sellerName || 'Atlas')
@@ -77,49 +137,31 @@ export default function CreateDespatch() {
         setCityName(getNS('CityName'))
         setPostalZone(getNS('PostalZone'))
         setCountry(getNS('IdentificationCode'))
-
         const token = localStorage.getItem('accessToken')
-        const res = await fetch('/atlas/api/despatch/next-id', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
+        const res = await fetch('/atlas/api/despatch/next-id', { headers: { 'Authorization': `Bearer ${token}` } })
         const data = await res.json()
         setDocId(data.nextId)
-
         setUploadedAndParsed(true)
     }
 
     const handleSubmit = async () => {
-        if (!file && mode !== 'manual') return
-
+        if (!file && mode !== 'manual' && !uploadedAndParsed) return
         const token = localStorage.getItem('accessToken')
-        let body
-
-        if (file && !uploadedAndParsed) {
-            body = await file.text()
-        } else {
-            body = `<?xml version="1.0" encoding="UTF-8"?><Order xmlns="urn:oasis:names:specification:ubl:schema:xsd:Order-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"><cbc:ID>${orderRefId}</cbc:ID><cbc:IssueDate>${issueDate}</cbc:IssueDate><cac:OrderReference><cbc:ID>${orderRefId}</cbc:ID><cbc:IssueDate>${issueDate}</cbc:IssueDate></cac:OrderReference><cac:SellerSupplierParty><cac:Party><cac:PartyName><cbc:Name>${supplierPartyName}</cbc:Name></cac:PartyName></cac:Party></cac:SellerSupplierParty><cac:BuyerCustomerParty><cac:Party><cac:PartyName><cbc:Name>${customerPartyName}</cbc:Name></cac:PartyName><cac:PostalAddress><cbc:StreetName>${streetName}</cbc:StreetName><cbc:CityName>${cityName}</cbc:CityName><cbc:PostalZone>${postalZone}</cbc:PostalZone><cbc:CountrySubentity>${state}</cbc:CountrySubentity><cac:Country><cbc:IdentificationCode>${country}</cbc:IdentificationCode></cac:Country></cac:PostalAddress></cac:Party></cac:BuyerCustomerParty></Order>`
-        }
-
+        const body = `<?xml version="1.0" encoding="UTF-8"?><Order xmlns="urn:oasis:names:specification:ubl:schema:xsd:Order-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"><cbc:ID>${orderRefId}</cbc:ID><cbc:IssueDate>${issueDate}</cbc:IssueDate><cac:OrderReference><cbc:ID>${orderRefId}</cbc:ID><cbc:IssueDate>${issueDate}</cbc:IssueDate></cac:OrderReference><cac:SellerSupplierParty><cac:Party><cac:PartyName><cbc:Name>${supplierPartyName}</cbc:Name></cac:PartyName></cac:Party></cac:SellerSupplierParty><cac:BuyerCustomerParty><cac:Party><cac:PartyName><cbc:Name>${customerPartyName}</cbc:Name></cac:PartyName><cac:PostalAddress><cbc:StreetName>${streetName}</cbc:StreetName><cbc:CityName>${cityName}</cbc:CityName><cbc:PostalZone>${postalZone}</cbc:PostalZone><cbc:CountrySubentity>${state}</cbc:CountrySubentity><cac:Country><cbc:IdentificationCode>${country}</cbc:IdentificationCode></cac:Country></cac:PostalAddress></cac:Party></cac:BuyerCustomerParty></Order>`
         const response = await fetch('/atlas/api/despatch/despatch-advice', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/xml',
-                'Authorization': `Bearer ${token}`
-            },
+            headers: { 'Content-Type': 'application/xml', 'Authorization': `Bearer ${token}` },
             body
         })
-
-        const data = await response.text()
         if (response.ok) {
             navigate('/despatch')
-        } else {
-            console.log('Error:', data)
         }
     }
 
     const resetForm = () => {
         setFile(null)
         setUploadedAndParsed(false)
+        setSelectedOrderId(null)
         setDocId('')
         setIssueDate(new Date().toISOString().split('T')[0])
         setIssueTime(new Date().toTimeString().split(' ')[0])
@@ -138,12 +180,12 @@ export default function CreateDespatch() {
         setCountry('')
     }
 
-    const canSubmit = 
+    const canSubmit =
         (uploadedAndParsed && orderRefId && customerPartyName) ||
         (mode === 'manual' && orderRefId && customerPartyName && streetName && cityName && postalZone && country)
 
     return (
-        <DashboardLayout>
+        <SellerDashboardLayout>
             <h1 className="text-2xl font-bold mb-8">Create Despatch Advice</h1>
 
             <div className="max-w-2xl flex flex-col gap-6">
@@ -162,7 +204,7 @@ export default function CreateDespatch() {
                             onClick={() => { resetForm(); setMode('upload') }}
                             onMouseEnter={() => setHoverUpload(true)}
                             onMouseLeave={() => setHoverUpload(false)}
-                            className={`flex-1 py-3 rounded-lg border text-sm font-medium transition-colors duration-100 ${uploadedAndParsed || hoverUpload ? 'bg-deep-sky-blue-600 text-white border-deep-sky-blue-600' : 'bg-white text-gray-600 border-gray-300'}`}
+                            className={`flex-1 py-3 rounded-lg border text-sm font-medium transition-colors duration-100 ${uploadedAndParsed && mode !== 'select' || hoverUpload ? 'bg-deep-sky-blue-600 text-white border-deep-sky-blue-600' : 'bg-white text-gray-600 border-gray-300'}`}
                         >
                             Upload XML
                         </button>
@@ -176,17 +218,37 @@ export default function CreateDespatch() {
                         </button>
                     </div>
 
-                    {file && (
-                        <p className="text-sm text-gray-500 mt-3">Selected: {file.name}</p>
+                    <input type="file" accept=".xml" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
+
+                    {/* Select Order mode */}
+                    {mode === 'select' && !uploadedAndParsed && (
+                        <div className="mt-6">
+                            {orderLoading ? (
+                                <p className="text-gray-400 text-sm text-center py-6">Loading orders...</p>
+                            ) : orderList.length === 0 ? (
+                                <p className="text-gray-400 text-sm text-center py-6">No orders found. <a href="/create-order" className="text-deep-sky-blue-600 hover:underline">Create one first.</a></p>
+                            ) : (
+                                <div className="flex flex-col gap-2 max-h-72 overflow-y-auto">
+                                    {orderList.map((order) => (
+                                        <button
+                                            key={order.id}
+                                            onClick={() => handleSelectOrder(order)}
+                                            className={`text-left p-3 border rounded-lg transition-colors ${selectedOrderId === order.id ? 'border-deep-sky-blue-600 bg-deep-sky-blue-50' : 'border-gray-200 hover:border-deep-sky-blue-400 hover:bg-deep-sky-blue-50'}`}
+                                        >
+                                            <p className="font-medium text-sm text-gray-800">{order.id}</p>
+                                            <p className="text-xs text-gray-400 mt-0.5">
+                                                Buyer: {order.buyer} · Seller: {order.seller} · {order.currency} {order.total} · {order.date}
+                                            </p>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     )}
 
-                    <input
-                        type="file"
-                        accept=".xml"
-                        ref={fileInputRef}
-                        onChange={handleFileUpload}
-                        className="hidden"
-                    />
+                    {file && mode !== 'select' && (
+                        <p className="text-sm text-gray-500 mt-3">Selected: {file.name}</p>
+                    )}
 
                     {(mode === 'manual' || uploadedAndParsed) && (
                         <div className="mt-6 flex flex-col gap-6">
@@ -239,12 +301,6 @@ export default function CreateDespatch() {
                             </div>
                         </div>
                     )}
-
-                    {mode === 'select' && (
-                        <div className="mt-6">
-                            <p className="text-gray-400 text-sm">Order selection coming soon</p>
-                        </div>
-                    )}
                 </div>
 
                 {(mode === 'manual' || uploadedAndParsed) && (
@@ -260,15 +316,12 @@ export default function CreateDespatch() {
 
                 {canSubmit && (
                     <div className="flex justify-end">
-                        <button
-                            onClick={handleSubmit}
-                            className="bg-deep-sky-blue-600 text-white px-6 py-3 rounded-lg hover:bg-deep-sky-blue-700"
-                        >
+                        <button onClick={handleSubmit} className="bg-deep-sky-blue-600 text-white px-6 py-3 rounded-lg hover:bg-deep-sky-blue-700">
                             Create Despatch
                         </button>
                     </div>
                 )}
             </div>
-        </DashboardLayout>
+        </SellerDashboardLayout>
     )
 }
