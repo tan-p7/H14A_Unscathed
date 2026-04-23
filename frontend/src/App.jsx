@@ -24,7 +24,7 @@ import CustomerSettings from './pages/customer/Settings'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/H14A_Unscathed/">
       <Routes>
         <Route path="/" element={<Landing/>} />
         <Route path="/login" element={<Login/>} />
