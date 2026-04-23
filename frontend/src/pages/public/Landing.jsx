@@ -1,14 +1,43 @@
 import Navbar from "../../components/shared/Navbar";
 import Footer from "../../components/shared/Footer";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 export default function Landing() {
+    const [showBanner, setShowBanner] = useState(true)
+
     return (
         <div className="min-h-screen flex flex-col">
             <Navbar />
 
+            {/* Promo banner */}
+            {showBanner && (
+                <div className="bg-deep-sky-blue-600 py-3 px-6 flex items-center justify-between gap-4">
+                    <div className="flex-1" />
+                    <div className="flex items-center gap-4 flex-1 justify-center flex-wrap">
+                        <p className="text-white text-sm font-semibold">
+                            Get 90% off your plan for your first 3 months when you buy by 30 April.
+                        </p>
+                        <Link to="/register">
+                            <button className="bg-white text-deep-sky-blue-600 text-sm font-semibold px-4 py-1.5 rounded-lg hover:bg-deep-sky-blue-50 transition-colors whitespace-nowrap">
+                                Claim offer →
+                            </button>
+                        </Link>
+                    </div>
+                    <div className="flex-1 flex justify-end">
+                        <button
+                            onClick={() => setShowBanner(false)}
+                            className="text-white hover:text-deep-sky-blue-100 text-lg leading-none"
+                            aria-label="Dismiss banner"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Hero */}
-            <section className="flex flex-col items-center text-center px-6 py-24 bg-white">
+            <section className="flex flex-col items-center text-center px-6 py-8 bg-white">
                 <div className="inline-block bg-deep-sky-blue-50 text-deep-sky-blue-600 text-xs font-semibold px-3 py-1 rounded-full mb-6">
                     Now with multi-country e-invoicing compliance
                 </div>
@@ -33,14 +62,6 @@ export default function Landing() {
                     </div>
                     <p className="text-gray-400 text-sm">No credit card required. Free plan available.</p>
                 </div>
-            </section>
-
-            {/* Free trial banner */}
-            <section className="bg-deep-sky-blue-600 py-4 px-6 text-center">
-                <p className="text-white text-sm">
-                    <span className="font-semibold">Limited time:</span> Get 3 months of Pro free when you sign up before 30 April.{' '}
-                    <Link to="/register" className="underline hover:no-underline">Claim offer →</Link>
-                </p>
             </section>
 
             {/* Stats */}
@@ -71,17 +92,17 @@ export default function Landing() {
                     <h2 className="text-3xl font-bold text-gray-900 text-center mb-4">Everything you need to run your supply chain</h2>
                     <p className="text-gray-500 text-center mb-12">Built around the UBL 2.1 standard so your documents work with any trading partner.</p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div className="p-6 border border-gray-100 rounded-xl">
+                        <div className="p-6 border border-gray-100 rounded-xl" style={{ backgroundColor: '#e5f8ff' }}>
                             <div className="text-2xl mb-3">📦</div>
                             <h3 className="font-semibold text-gray-800 mb-2">Order Management</h3>
                             <p className="text-gray-500 text-sm">Create and track purchase orders from placement through to delivery.</p>
                         </div>
-                        <div className="p-6 border border-gray-100 rounded-xl">
+                        <div className="p-6 border border-gray-100 rounded-xl" style={{ backgroundColor: '#e5f8ff' }}>
                             <div className="text-2xl mb-3">🚚</div>
                             <h3 className="font-semibold text-gray-800 mb-2">Despatch Advice</h3>
                             <p className="text-gray-500 text-sm">Generate UBL 2.1 compliant despatch advice documents with a few clicks.</p>
                         </div>
-                        <div className="p-6 border border-gray-100 rounded-xl">
+                        <div className="p-6 border border-gray-100 rounded-xl" style={{ backgroundColor: '#e5f8ff' }}>
                             <div className="text-2xl mb-3">🧾</div>
                             <h3 className="font-semibold text-gray-800 mb-2">E-Invoicing</h3>
                             <p className="text-gray-500 text-sm">Generate compliant invoices for AU/NZ, Singapore, Japan, EU, and the US.</p>

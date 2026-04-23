@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
-import SellerDashboardLayout  from '../../components/seller/SellerDashboardLayout'
+import { useParams, useNavigate } from 'react-router-dom'
+import SellerDashboardLayout from '../../components/seller/SellerDashboardLayout'
 
 export default function ViewDespatch() {
     const { id } = useParams()
+    const navigate = useNavigate()
     const [despatch, setDespatch] = useState(null)
     const [formatted, setFormatted] = useState(null)
     const [loading, setLoading] = useState(true)
@@ -58,30 +59,15 @@ export default function ViewDespatch() {
     }, [id])
 
     const handleUpdate = async () => {
-        if (!deliveredQuantity) {
-            setError('Please complete all fields')
-            return
-        }
-        if (!backorderQuantity) {
-            setError('Please complete all fields')
-            return
-        }
-        if (!backorderReason) {
-            setError('Please complete all fields')
-            return
-        }
-        if (backorderReason === 'Other' && !backorderReasonOther) {
-            setError('Please complete all fields')
-            return
-        }
+        if (!deliveredQuantity) { setError('Please complete all fields'); return }
+        if (!backorderQuantity) { setError('Please complete all fields'); return }
+        if (!backorderReason) { setError('Please complete all fields'); return }
+        if (backorderReason === 'Other' && !backorderReasonOther) { setError('Please complete all fields'); return }
 
         const token = localStorage.getItem('accessToken')
         const response = await fetch(`/atlas/api/despatch/despatch-advice/${id}`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({
                 deliveredQuantity: deliveredQuantity ? Number(deliveredQuantity) : undefined,
                 backorderQuantity: backorderQuantity ? Number(backorderQuantity) : undefined,
@@ -102,7 +88,7 @@ export default function ViewDespatch() {
     }
 
     return (
-        <SellerDashboardLayout >
+        <SellerDashboardLayout>
             <h1 className="text-2xl font-bold mb-6">Despatch Advice {id}</h1>
 
             {success && (
@@ -118,18 +104,14 @@ export default function ViewDespatch() {
                     <button onClick={() => setError('')} className="text-red-700 hover:text-red-900 font-bold text-lg leading-none">✕</button>
                 </div>
             )}
-            
+
             <div className="flex flex-col gap-6">
                 <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                     <h2 className="text-lg font-semibold mb-4">Update Despatch</h2>
                     <div className="grid grid-cols-2 gap-4">
                         <input type="number" placeholder="Delivered Quantity" value={deliveredQuantity} onChange={(e) => setDeliveredQuantity(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2" />
                         <input type="number" placeholder="Backorder Quantity" value={backorderQuantity} onChange={(e) => setBackorderQuantity(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2" />
-                        <select
-                            value={backorderReason}
-                            onChange={(e) => setBackorderReason(e.target.value)}
-                            className="border border-gray-300 rounded-lg px-4 py-2 text-sm"
-                        >
+                        <select value={backorderReason} onChange={(e) => setBackorderReason(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 text-sm">
                             <option value="">Select Backorder Reason</option>
                             <option value="Out of stock">Out of stock</option>
                             <option value="Damaged in transit">Damaged in transit</option>
@@ -141,13 +123,7 @@ export default function ViewDespatch() {
                         <input type="text" placeholder="Note" value={note} onChange={(e) => setNote(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2" />
                     </div>
                     {backorderReason === 'Other' && (
-                        <input
-                            type="text"
-                            placeholder="Please specify..."
-                            value={backorderReasonOther}
-                            onChange={(e) => setBackorderReasonOther(e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm mt-2"
-                        />
+                        <input type="text" placeholder="Please specify..." value={backorderReasonOther} onChange={(e) => setBackorderReasonOther(e.target.value)} className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm mt-2" />
                     )}
                     <div className="flex justify-end mt-4">
                         <button onClick={handleUpdate} className="bg-deep-sky-blue-600 text-white px-6 py-2 rounded-lg hover:bg-deep-sky-blue-700">Update</button>
@@ -157,10 +133,7 @@ export default function ViewDespatch() {
                 <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-lg font-semibold">Document</h2>
-                        <button
-                            onClick={() => setShowFormatted(!showFormatted)}
-                            className="text-sm border border-gray-300 px-4 py-1 rounded-md hover:bg-gray-50"
-                        >
+                        <button onClick={() => setShowFormatted(!showFormatted)} className="text-sm border border-gray-300 px-4 py-1 rounded-md hover:bg-gray-50">
                             {showFormatted ? 'View Raw XML' : 'View Formatted'}
                         </button>
                     </div>

@@ -19,27 +19,25 @@ export default function CustomerDespatch() {
     return (
         <CustomerDashboardLayout>
             <div className="flex flex-col h-full">
-                <div className="flex justify-between items-center mb-4">
-                    <h1 className="text-2xl font-bold">My Deliveries</h1>
-                </div>
+                <h1 className="text-2xl font-bold mb-4">My Deliveries</h1>
                 <div className="flex gap-4 mb-4">
                     <input type="text" placeholder="Search deliveries..." value={search} onChange={(e) => setSearch(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 w-64" />
                     <div className="flex gap-2">
                         {['All', 'In Transit', 'Out for Delivery', 'Delivered'].map((status) => (
-                            <button key={status} onClick={() => setFilter(status)} className={`px-4 py-2 rounded-md text-sm ${filter === status ? 'bg-deep-sky-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>{status}</button>
+                            <button key={status} onClick={() => setFilter(status)} className={`px-4 py-2 rounded-md text-sm ${filter === status ? 'bg-deep-sky-blue-600 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}>{status}</button>
                         ))}
                     </div>
                 </div>
-                <div className="rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-1 overflow-y-auto">
+                <div className="rounded-xl shadow-sm border border-gray-300 overflow-hidden flex-1 overflow-y-auto">
                     <table className="w-full border-collapse">
-                        <thead className="sticky top-0 bg-gray-50">
-                            <tr className="text-left text-gray-500 text-sm">
-                                <th className="px-4 py-3 border-b border-gray-100">Despatch ID</th>
-                                <th className="px-4 py-3 border-b border-gray-100">Order ID</th>
-                                <th className="px-4 py-3 border-b border-gray-100">Supplier</th>
-                                <th className="px-4 py-3 border-b border-gray-100">Dispatched</th>
-                                <th className="px-4 py-3 border-b border-gray-100">Expected</th>
-                                <th className="px-4 py-3 border-b border-gray-100">Status</th>
+                        <thead className="sticky top-0 bg-gray-200">
+                            <tr className="text-left text-gray-600 text-sm">
+                                <th className="px-4 py-3 border-b border-gray-300">Despatch ID</th>
+                                <th className="px-4 py-3 border-b border-gray-300">Order ID</th>
+                                <th className="px-4 py-3 border-b border-gray-300">Supplier</th>
+                                <th className="px-4 py-3 border-b border-gray-300">Dispatched</th>
+                                <th className="px-4 py-3 border-b border-gray-300">Expected</th>
+                                <th className="px-4 py-3 border-b border-gray-300">Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -47,7 +45,7 @@ export default function CustomerDespatch() {
                                 <tr><td colSpan="6" className="px-4 py-8 text-center text-gray-400">No deliveries found.</td></tr>
                             ) : (
                                 filtered.map((d, index) => (
-                                    <tr key={index} className="hover:bg-gray-50 border-b border-gray-100">
+                                    <tr key={index} className="hover:bg-gray-50 border-b border-gray-200">
                                         <td className="px-4 py-3 text-deep-sky-blue-600 text-sm">{d.id}</td>
                                         <td className="px-4 py-3 text-sm">{d.orderId}</td>
                                         <td className="px-4 py-3 text-sm">{d.supplier}</td>

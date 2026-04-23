@@ -9,6 +9,8 @@ export default function Despatch() {
     const [loading, setLoading] = useState(true)
     const [selected, setSelected] = useState([])
     const [showConfirm, setShowConfirm] = useState(false)
+    const [showStatusMenu, setShowStatusMenu] = useState(false)
+    const [statusUpdating, setStatusUpdating] = useState(false)
 
     useEffect(() => {
         const fetchDespatches = async () => {
@@ -23,7 +25,10 @@ export default function Despatch() {
                 const idMatch = advice.match(/<ns1:ID>(.*?)<\/ns1:ID>/)
                 const dateMatch = advice.match(/<ns1:IssueDate>(.*?)<\/ns1:IssueDate>/)
                 const orderRefMatch = advice.match(/<ns2:OrderReference>[\s\S]*?<ns1:ID>(.*?)<\/ns1:ID>/)
-                return { id: idMatch?.[1] || '', date: dateMatch?.[1] || '', orderId: orderRefMatch?.[1] || '', status: 'Pending' }
+                const statusMatch = advice.match(/<ns1:DocumentStatusCode>(.*?)<\/ns1:DocumentStatusCode>/)
+                const rawStatus = statusMatch?.[1] || 'NoStatus'
+                const status = rawStatus === 'NoStatus' ? 'Pending' : rawStatus
+                return { id: idMatch?.[1] || '', date: dateMatch?.[1] || '', orderId: orderRefMatch?.[1] || '', status }
             })
             setDespatchList(parsed)
             setLoading(false)
@@ -46,6 +51,28 @@ export default function Despatch() {
         setShowConfirm(false)
     }
 
+    const handleStatusChange = async (newStatus) => {
+        setStatusUpdating(true)
+        setShowStatusMenu(false)
+        const token = localStorage.getItem('accessToken')
+        await Promise.all(selected.map(id =>
+            fetch(`/atlas/api/despatch/despatch-advice/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ status: newStatus })
+            })
+        ))
+        setDespatchList(prev => prev.map(d => selected.includes(d.id) ? { ...d, status: newStatus } : d))
+        setSelected([])
+        setStatusUpdating(false)
+    }
+
+    const statusStyles = {
+        Pending: 'bg-yellow-100 text-yellow-700',
+        Shipped: 'bg-blue-100 text-blue-700',
+        Delivered: 'bg-green-100 text-green-700',
+    }
+
     return (
         <SellerDashboardLayout>
             <div className="flex flex-col h-full">
@@ -61,17 +88,46 @@ export default function Despatch() {
                         </div>
                     </div>
                 )}
+
                 <div className="flex justify-between items-center mb-4">
                     <h1 className="text-2xl font-bold">Despatch Advice</h1>
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 items-center">
                         {selected.length > 0 && (
-                            <button onClick={() => setShowConfirm(true)} className="border border-red-300 text-red-500 px-4 py-2 rounded-lg hover:bg-red-500 hover:text-white text-sm transition-colors duration-100">Delete ({selected.length})</button>
+                            <>
+                                {/* Status dropdown */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowStatusMenu(prev => !prev)}
+                                        disabled={statusUpdating}
+                                        className="border border-gray-300 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-50 text-sm disabled:opacity-50"
+                                    >
+                                        {statusUpdating ? 'Updating...' : `Set Status (${selected.length}) ▾`}
+                                    </button>
+                                    {showStatusMenu && (
+                                        <div className="absolute right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-36">
+                                            {['Pending', 'Shipped', 'Delivered'].map(s => (
+                                                <button
+                                                    key={s}
+                                                    onClick={() => handleStatusChange(s)}
+                                                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg"
+                                                >
+                                                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusStyles[s]}`}>{s}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                <button onClick={() => setShowConfirm(true)} className="border border-red-300 text-red-500 px-4 py-2 rounded-lg hover:bg-red-500 hover:text-white text-sm transition-colors duration-100">
+                                    Delete ({selected.length})
+                                </button>
+                            </>
                         )}
                         <Link to="/create-despatch">
                             <button className="bg-deep-sky-blue-600 text-white px-4 py-2 rounded-lg hover:bg-deep-sky-blue-700">+ Create Despatch</button>
                         </Link>
                     </div>
                 </div>
+
                 <div className="flex gap-4 mb-4">
                     <input type="text" placeholder="Search despatch..." value={search} onChange={(e) => setSearch(e.target.value)} className="border border-gray-300 rounded-lg px-4 py-2 w-64" />
                     <div className="flex gap-2">
@@ -80,6 +136,7 @@ export default function Despatch() {
                         ))}
                     </div>
                 </div>
+
                 <div className="rounded-xl shadow-sm border border-gray-300 overflow-hidden flex-1 overflow-y-auto">
                     <table className="w-full border-collapse">
                         <thead className="sticky top-0 bg-gray-200">
@@ -104,7 +161,7 @@ export default function Despatch() {
                                         <td className="px-4 py-3">{d.orderId}</td>
                                         <td className="px-4 py-3 text-gray-500">{d.date}</td>
                                         <td className="px-4 py-3">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${d.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : d.status === 'Shipped' ? 'bg-blue-100 text-blue-700' : d.status === 'Delivered' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{d.status}</span>
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[d.status] || 'bg-gray-100 text-gray-600'}`}>{d.status}</span>
                                         </td>
                                     </tr>
                                 ))
