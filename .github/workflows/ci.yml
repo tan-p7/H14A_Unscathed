@@ -1,37 +1,42 @@
-name: Python CI
+name: Deploy Frontend to GitHub Pages
 
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+      - Sprint-4/Anika/Frontend
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
-
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          python-version: '3.11'
+          node-version: 20
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install boto3 pytest pytest-cov xmlschema PyJWT bcrypt requests
-          python -m pip install boto3 pytest pytest-cov xmlschema requests
+        working-directory: ./frontend
+        run: npm install
 
-      - name: Run tests with coverage
-        run: PYTHONPATH=. pytest src/tests -v --cov=src --cov-report=term --cov-report=html
+      - name: Build
+        working-directory: ./frontend
+        run: npm run build
 
-      - name: Upload coverage HTML report
-        uses: actions/upload-artifact@v4
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: coverage-html
-          path: htmlcov
+          path: ./frontend/dist   # or ./frontend/build if using CRA
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
