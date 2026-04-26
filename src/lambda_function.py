@@ -13,6 +13,8 @@ from src.update_despatch import update_despatch_advice
 from src.auth_service import register, login, logout
 from src.auth_dependencies import get_auth_context
 from src.invoice_handling import createInvoice, retrieveInvoiceById, updateInvoiceById, deleteInvoiceById, createCreditNote, InvoiceStatus, InvoiceToPdf
+from src.api_keys_auth import require_api_key,extract_api_key
+from src.api_keys_db import create_api_key, get_api_key
 from src.shopping_cart import addItemToShoppingCart, removeItemFromShoppingCart, updateItemInShoppingCart, retrieveShoppingCart, clearShoppingCart
 from src.order_api_handling import createOrder, retrieveOrderById, updateOrder, deleteOrder
 from src.validate_ubl import validate_order, validate_despatch, validate_invoice
@@ -41,6 +43,18 @@ def _require_auth(event):
         return None, _auth_error_response(err)
     return claims, None
 
+
+def _require_auth_or_api_key(event):
+    claims, blocked = _require_auth(event)
+
+    if not blocked:
+        return claims, None
+
+    ok, owner = require_api_key(event)
+    if ok:
+        return {"email": owner, "auth": "api_key"}, None
+
+    return None, blocked
 
 def lambda_handler(event, context):
     """Handles requests coming from API Gateway and calls the appropriate route to manage despatch advices stored in the DynamoDB table.
@@ -76,21 +90,32 @@ def lambda_handler(event, context):
         # Determine the API endpoint requested and call the appropriate function
         if http_method == 'GET' and path == HEALTH_CHECK_PATH:
             return health_check(event, context)
-        elif http_method == 'POST' and path == DESPATCH_ADVICE_PATH:
+        elif http_method == 'POST'and path == AUTH_BASE + '/create-api-key':
             claims, blocked = _require_auth(event)
+            if blocked:
+                return blocked
+
+            owner = claims.get("email")
+            api_key = create_api_key(owner)
+
+            return build_response(200, JSON_TYPE, {
+                "api_key": api_key
+            })
+        elif http_method == 'POST' and path == DESPATCH_ADVICE_PATH:
+            claims, blocked = _require_auth_or_api_key(event)
             if blocked:
                 response = blocked
             else:
                 body = event.get('body') or ''
                 response = generate_despatch(body, claims.get("email"))
         elif http_method == 'GET' and path == DESPATCH_ADVICE_PATH:
-            claims, blocked = _require_auth(event)
+            claims, blocked = _require_auth_or_api_key(event)
             if blocked:
                 response = blocked
             else:
                 response = retrieve_all_despatch_advice(claims.get("email"))
         elif http_method == 'GET' and path.startswith(DESPATCH_ADVICE_PATH) and path_parameters:
-            claims, blocked = _require_auth(event)
+            claims, blocked = _require_auth_or_api_key(event)
             if blocked:
                 response = blocked
             else:
@@ -103,7 +128,7 @@ def lambda_handler(event, context):
                     # Pass through as string to match DynamoDB partition key type
                     response = retrieve_despatch(claims.get("email"), despatch_id)
         elif http_method == 'PUT' and path.startswith(DESPATCH_ADVICE_PATH) and path_parameters:
-            claims, blocked = _require_auth(event)
+            claims, blocked = _require_auth_or_api_key(event)
             if blocked:
                 response = blocked
             else:
@@ -115,7 +140,7 @@ def lambda_handler(event, context):
                 else:
                     response = update_despatch_advice(claims.get("email"), despatch_id, body)
         elif http_method == 'DELETE' and path.startswith(DESPATCH_ADVICE_PATH) and path_parameters:
-            claims, blocked = _require_auth(event)
+            claims, blocked = _require_auth_or_api_key(event)
             if blocked:
                 response = blocked
             else:
