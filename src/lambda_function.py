@@ -12,6 +12,7 @@ from src.retrieve_all_despatch import retrieve_all_despatch_advice
 from src.update_despatch import update_despatch_advice
 from src.auth_service import register, login, logout
 from src.auth_dependencies import get_auth_context
+from src.invoice_handling import createInvoice, retrieveInvoiceById, updateInvoiceById, deleteInvoiceById, createCreditNote, InvoiceStatus, InvoiceToPdf
 from src.api_keys_auth import require_api_key,extract_api_key
 from src.api_keys_db import create_api_key, get_api_key
 from src.shopping_cart import addItemToShoppingCart, removeItemFromShoppingCart, updateItemInShoppingCart, retrieveShoppingCart, clearShoppingCart
@@ -28,6 +29,8 @@ AUTH_REGISTER_PATH = AUTH_BASE + '/register'
 AUTH_LOGIN_PATH = AUTH_BASE + '/login'
 AUTH_LOGOUT_PATH = AUTH_BASE + '/logout'
 
+# Invoice Constants
+INVOICE_PATH = '/v1/invoices'
 
 def _auth_error_response(message: str):
     return build_response(401, JSON_TYPE, {"message": message})
@@ -228,6 +231,56 @@ def lambda_handler(event, context):
         elif http_method == 'POST' and path == '/api/validate/invoice':
             body = event.get('body') or ''
             response = validate_invoice(body)
+
+
+                
+        # Invoice Routes
+        elif http_method == 'POST' and path == INVOICE_PATH:
+            response = createInvoice()
+
+        elif http_method == 'GET' and path.startswith(INVOICE_PATH) and path_parameters:
+            invoice_id = path_parameters.get('invoice_id')
+            if not invoice_id:
+                response = build_response(404, JSON_TYPE, "Not Found")
+            else:
+                response = retrieveInvoiceById(invoice_id)
+
+        elif http_method == 'PUT' and path.startswith(INVOICE_PATH) and path_parameters:
+            invoice_id = path_parameters.get('invoice_id')
+            if not invoice_id:
+                response = build_response(404, JSON_TYPE, "Not Found")
+            else:
+                response = updateInvoiceById(invoice_id)
+
+        elif http_method == 'DELETE' and path.startswith(INVOICE_PATH) and path_parameters:
+            invoice_id = path_parameters.get('invoice_id')
+            if not invoice_id:
+                response = build_response(404, JSON_TYPE, "Not Found")
+            else:
+                response = deleteInvoiceById(invoice_id)
+
+        elif http_method == 'POST' and path.startswith(INVOICE_PATH) and path.endswith('/status') and path_parameters:
+            invoice_id = path_parameters.get('invoice_id')
+            if not invoice_id:
+                response = build_response(404, JSON_TYPE, "Not Found")
+            else:
+                response = InvoiceStatus(invoice_id)    
+
+        elif http_method == 'POST' and path.startswith(INVOICE_PATH) and path.endswith('/credit-note') and path_parameters:
+            invoice_id = path_parameters.get('invoice_id')
+            if not invoice_id:
+                response = build_response(404, JSON_TYPE, "Not Found")
+            else:
+                response = createCreditNote(invoice_id)
+                
+        elif http_method == 'GET' and path.startswith(INVOICE_PATH) and path.endswith('/pdf') and path_parameters:
+            invoice_id = path_parameters.get('invoice_id')
+            if not invoice_id:
+                response = build_response(404, JSON_TYPE, "Not Found")
+            else:
+                response = InvoiceToPdf(invoice_id)
+
+
 
         else:
             response = build_response(404, JSON_TYPE, 'Not Found')

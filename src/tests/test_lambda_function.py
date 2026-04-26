@@ -6,6 +6,7 @@ from src.lambda_function import lambda_handler
 BASE_URL = '/api/despatch'
 HEALTH_CHECK_PATH = BASE_URL + '/health'
 DESPATCH_ADVICE_PATH = BASE_URL + '/despatch-advice'
+INVOICE_PATH = '/api/invoices'
 
 valid_order_str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Order xmlns:cbc=\"urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2\" xmlns:cac=\"urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2\" xmlns=\"urn:oasis:names:specification:ubl:schema:xsd:Order-2\">\n\t<cbc:UBLVersionID>2.0</cbc:UBLVersionID>\n\t<cbc:CustomizationID>urn:oasis:names:specification:ubl:xpath:Order-2.0:sbs-1.0-draft</cbc:CustomizationID>\n\t<cbc:ProfileID>bpid:urn:oasis:names:draft:bpss:ubl-2-sbs-order-with-simple-response-draft</cbc:ProfileID>\n\t<cbc:ID>AEG012345</cbc:ID>\n\t<cbc:SalesOrderID>CON0095678</cbc:SalesOrderID>\n\t<cbc:CopyIndicator>false</cbc:CopyIndicator>\n\t<cbc:UUID>6E09886B-DC6E-439F-82D1-7CCAC7F4E3B1</cbc:UUID>\n\t<cbc:IssueDate>2005-06-20</cbc:IssueDate>\n\t<cbc:Note>sample</cbc:Note>\n\t<cac:BuyerCustomerParty>\n\t\t<cbc:CustomerAssignedAccountID>XFB01</cbc:CustomerAssignedAccountID>\n\t\t<cbc:SupplierAssignedAccountID>GT00978567</cbc:SupplierAssignedAccountID>\n\t\t<cac:Party>\n\t\t\t<cac:PartyName>\n\t\t\t\t<cbc:Name>IYT Corporation</cbc:Name>\n\t\t\t</cac:PartyName>\n\t\t\t<cac:PostalAddress>\n\t\t\t\t<cbc:StreetName>Avon Way</cbc:StreetName>\n\t\t\t\t<cbc:BuildingName>Thereabouts</cbc:BuildingName>\n\t\t\t\t<cbc:BuildingNumber>56A</cbc:BuildingNumber>\n\t\t\t\t<cbc:CityName>Bridgtow</cbc:CityName>\n\t\t\t\t<cbc:PostalZone>ZZ99 1ZZ</cbc:PostalZone>\n\t\t\t\t<cbc:CountrySubentity>Avon</cbc:CountrySubentity>\n\t\t\t\t<cac:AddressLine>\n\t\t\t\t\t<cbc:Line>3rd Floor, Room 5</cbc:Line>\n\t\t\t\t</cac:AddressLine>\n\t\t\t\t<cac:Country>\n\t\t\t\t\t<cbc:IdentificationCode>GB</cbc:IdentificationCode>\n\t\t\t\t</cac:Country>\n\t\t\t</cac:PostalAddress>\n\t\t\t<cac:PartyTaxScheme>\n\t\t\t\t<cbc:RegistrationName>Bridgtow District Council</cbc:RegistrationName>\n\t\t\t\t<cbc:CompanyID>12356478</cbc:CompanyID>\n\t\t\t\t<cbc:ExemptionReason>Local Authority</cbc:ExemptionReason>\n\t\t\t\t<cac:TaxScheme>\n\t\t\t\t\t<cbc:ID>UK VAT</cbc:ID>\n\t\t\t\t\t<cbc:TaxTypeCode>VAT</cbc:TaxTypeCode>\n\t\t\t\t</cac:TaxScheme>\n\t\t\t</cac:PartyTaxScheme>\n\t\t\t<cac:Contact>\n\t\t\t\t<cbc:Name>Mr Fred Churchill</cbc:Name>\n\t\t\t\t<cbc:Telephone>0127 2653214</cbc:Telephone>\n\t\t\t\t<cbc:Telefax>0127 2653215</cbc:Telefax>\n\t\t\t\t<cbc:ElectronicMail>fred@iytcorporation.gov.uk</cbc:ElectronicMail>\n\t\t\t</cac:Contact>\n\t\t</cac:Party>\n\t</cac:BuyerCustomerParty>\n\t<cac:SellerSupplierParty>\n\t\t<cbc:CustomerAssignedAccountID>CO001</cbc:CustomerAssignedAccountID>\n\t\t<cac:Party>\n\t\t\t<cac:PartyName>\n\t\t\t\t<cbc:Name>Consortial</cbc:Name>\n\t\t\t</cac:PartyName>\n\t\t\t<cac:PostalAddress>\n\t\t\t\t<cbc:StreetName>Busy Street</cbc:StreetName>\n\t\t\t\t<cbc:BuildingName>Thereabouts</cbc:BuildingName>\n\t\t\t\t<cbc:BuildingNumber>56A</cbc:BuildingNumber>\n\t\t\t\t<cbc:CityName>Farthing</cbc:CityName>\n\t\t\t\t<cbc:PostalZone>AA99 1BB</cbc:PostalZone>\n\t\t\t\t<cbc:CountrySubentity>Heremouthshire</cbc:CountrySubentity>\n\t\t\t\t<cac:AddressLine>\n\t\t\t\t\t<cbc:Line>The Roundabout</cbc:Line>\n\t\t\t\t</cac:AddressLine>\n\t\t\t\t<cac:Country>\n\t\t\t\t\t<cbc:IdentificationCode>GB</cbc:IdentificationCode>\n\t\t\t\t</cac:Country>\n\t\t\t</cac:PostalAddress>\n\t\t\t<cac:PartyTaxScheme>\n\t\t\t\t<cbc:RegistrationName>Farthing Purchasing Consortium</cbc:RegistrationName>\n\t\t\t\t<cbc:CompanyID>175 269 2355</cbc:CompanyID>\n\t\t\t\t<cbc:ExemptionReason>N/A</cbc:ExemptionReason>\n\t\t\t\t<cac:TaxScheme>\n\t\t\t\t\t<cbc:ID>VAT</cbc:ID>\n\t\t\t\t\t<cbc:TaxTypeCode>VAT</cbc:TaxTypeCode>\n\t\t\t\t</cac:TaxScheme>\n\t\t\t</cac:PartyTaxScheme>\n\t\t\t<cac:Contact>\n\t\t\t\t<cbc:Name>Mrs Bouquet</cbc:Name>\n\t\t\t\t<cbc:Telephone>0158 1233714</cbc:Telephone>\n\t\t\t\t<cbc:Telefax>0158 1233856</cbc:Telefax>\n\t\t\t\t<cbc:ElectronicMail>bouquet@fpconsortial.co.uk</cbc:ElectronicMail>\n\t\t\t</cac:Contact>\n\t\t</cac:Party>\n\t</cac:SellerSupplierParty>\n\t<cac:OriginatorCustomerParty>\n\t\t<cac:Party>\n\t\t\t<cac:PartyName>\n\t\t\t\t<cbc:Name>The Terminus</cbc:Name>\n\t\t\t</cac:PartyName>\n\t\t\t<cac:PostalAddress>\n\t\t\t\t<cbc:StreetName>Avon Way</cbc:StreetName>\n\t\t\t\t<cbc:BuildingName>Thereabouts</cbc:BuildingName>\n\t\t\t\t<cbc:BuildingNumber>56A</cbc:BuildingNumber>\n\t\t\t\t<cbc:CityName>Bridgtow</cbc:CityName>\n\t\t\t\t<cbc:PostalZone>ZZ99 1ZZ</cbc:PostalZone>\n\t\t\t\t<cbc:CountrySubentity>Avon</cbc:CountrySubentity>\n\t\t\t\t<cac:AddressLine>\n\t\t\t\t\t<cbc:Line>3rd Floor, Room 5</cbc:Line>\n\t\t\t\t</cac:AddressLine>\n\t\t\t\t<cac:Country>\n\t\t\t\t\t<cbc:IdentificationCode>GB</cbc:IdentificationCode>\n\t\t\t\t</cac:Country>\n\t\t\t</cac:PostalAddress>\n\t\t\t<cac:PartyTaxScheme>\n\t\t\t\t<cbc:RegistrationName>Bridgtow District Council</cbc:RegistrationName>\n\t\t\t\t<cbc:CompanyID>12356478</cbc:CompanyID>\n\t\t\t\t<cbc:ExemptionReason>Local Authority</cbc:ExemptionReason>\n\t\t\t\t<cac:TaxScheme>\n\t\t\t\t\t<cbc:ID>UK VAT</cbc:ID>\n\t\t\t\t\t<cbc:TaxTypeCode>VAT</cbc:TaxTypeCode>\n\t\t\t\t</cac:TaxScheme>\n\t\t\t</cac:PartyTaxScheme>\n\t\t\t<cac:Contact>\n\t\t\t\t<cbc:Name>S Massiah</cbc:Name>\n\t\t\t\t<cbc:Telephone>0127 98876545</cbc:Telephone>\n\t\t\t\t<cbc:Telefax>0127 98876546</cbc:Telefax>\n\t\t\t\t<cbc:ElectronicMail>smassiah@the-email.co.uk</cbc:ElectronicMail>\n\t\t\t</cac:Contact>\n\t\t</cac:Party>\n\t</cac:OriginatorCustomerParty>\n\t<cac:Delivery>\n\t\t<cac:DeliveryAddress>\n\t\t\t<cbc:StreetName>Avon Way</cbc:StreetName>\n\t\t\t<cbc:BuildingName>Thereabouts</cbc:BuildingName>\n\t\t\t<cbc:BuildingNumber>56A</cbc:BuildingNumber>\n\t\t\t<cbc:CityName>Bridgtow</cbc:CityName>\n\t\t\t<cbc:PostalZone>ZZ99 1ZZ</cbc:PostalZone>\n\t\t\t<cbc:CountrySubentity>Avon</cbc:CountrySubentity>\n\t\t\t<cac:AddressLine>\n\t\t\t\t<cbc:Line>3rd Floor, Room 5</cbc:Line>\n\t\t\t</cac:AddressLine>\n\t\t\t<cac:Country>\n\t\t\t\t<cbc:IdentificationCode>GB</cbc:IdentificationCode>\n\t\t\t</cac:Country>\n\t\t</cac:DeliveryAddress>\n\t\t<cac:RequestedDeliveryPeriod>\n\t\t\t<cbc:StartDate>2005-06-29</cbc:StartDate>\n\t\t\t<cbc:StartTime>09:30:47.0Z</cbc:StartTime>\n\t\t\t<cbc:EndDate>2005-06-29</cbc:EndDate>\n\t\t\t<cbc:EndTime>09:30:47.0Z</cbc:EndTime>\n\t\t</cac:RequestedDeliveryPeriod>\n\t</cac:Delivery>\n\t<cac:DeliveryTerms>\n\t\t<cbc:SpecialTerms>1% deduction for late delivery as per contract</cbc:SpecialTerms>\n\t</cac:DeliveryTerms>\n\t<cac:TransactionConditions>\n\t\t<cbc:Description>order response required; payment is by BACS or by cheque</cbc:Description>\n\t</cac:TransactionConditions>\n\t<cac:AnticipatedMonetaryTotal>\n\t\t<cbc:LineExtensionAmount currencyID=\"GBP\">100.00</cbc:LineExtensionAmount>\n\t\t<cbc:PayableAmount currencyID=\"GBP\">100.00</cbc:PayableAmount>\n\t</cac:AnticipatedMonetaryTotal>\n\t<cac:OrderLine>\n\t\t<cbc:Note>this is an illustrative order line</cbc:Note>\n\t\t<cac:LineItem>\n\t\t\t<cbc:ID>1</cbc:ID>\n\t\t\t<cbc:SalesOrderID>A</cbc:SalesOrderID>\n\t\t\t<cbc:LineStatusCode>NoStatus</cbc:LineStatusCode>\n\t\t\t<cbc:Quantity unitCode=\"KGM\">100</cbc:Quantity>\n\t\t\t<cbc:LineExtensionAmount currencyID=\"GBP\">100.00</cbc:LineExtensionAmount>\n\t\t\t<cbc:TotalTaxAmount currencyID=\"GBP\">17.50</cbc:TotalTaxAmount>\n\t\t\t<cac:Price>\n\t\t\t\t<cbc:PriceAmount currencyID=\"GBP\">100.00</cbc:PriceAmount>\n\t\t\t\t<cbc:BaseQuantity unitCode=\"KGM\">1</cbc:BaseQuantity>\n\t\t\t</cac:Price>\n\t\t\t<cac:Item>\n\t\t\t\t<cbc:Description>Acme beeswax</cbc:Description>\n\t\t\t\t<cbc:Name>beeswax</cbc:Name>\n\t\t\t\t<cac:BuyersItemIdentification>\n\t\t\t\t\t<cbc:ID>6578489</cbc:ID>\n\t\t\t\t</cac:BuyersItemIdentification>\n\t\t\t\t<cac:SellersItemIdentification>\n\t\t\t\t\t<cbc:ID>17589683</cbc:ID>\n\t\t\t\t</cac:SellersItemIdentification>\n\t\t\t</cac:Item>\n\t\t</cac:LineItem>\n\t</cac:OrderLine>\n</Order>"
 valid_despatch_str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<DespatchAdvice xmlns:cbc=\"urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2\" xmlns:cac=\"urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2\" xmlns=\"urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2\">\n\t<cbc:UBLVersionID>2.0</cbc:UBLVersionID>\n\t<cbc:CustomizationID>urn:oasis:names:specification:ubl:xpath:DespatchAdvice-2.0:sbs-1.0-draft</cbc:CustomizationID>\n\t<cbc:ProfileID>bpid:urn:oasis:names:draft:bpss:ubl-2-sbs-despatch-advice-notification-draft</cbc:ProfileID>\n\t<cbc:ID>565899</cbc:ID>\n\t<cbc:CopyIndicator>false</cbc:CopyIndicator>\n\t<cbc:UUID>88C7280E-8F10-419F-9949-8EFFFA2842B8</cbc:UUID>\n\t<cbc:IssueDate>2005-06-20</cbc:IssueDate>\n\t<cbc:DocumentStatusCode>NoStatus</cbc:DocumentStatusCode>\n\t<cbc:DespatchAdviceTypeCode>delivery</cbc:DespatchAdviceTypeCode>\n\t<cbc:Note>sample</cbc:Note>\n\t<cac:OrderReference>\n\t\t<cbc:ID>AEG012345</cbc:ID>\n\t\t<cbc:SalesOrderID>CON0095678</cbc:SalesOrderID>\n\t\t<cbc:UUID>6E09886B-DC6E-439F-82D1-7CCAC7F4E3B1</cbc:UUID>\n\t\t<cbc:IssueDate>2005-06-20</cbc:IssueDate>\n\t</cac:OrderReference>\n\t...\n</DespatchAdvice>"
@@ -223,6 +224,68 @@ class TestLambdaDespatchRequiresAuth:
         mock_retrieve.assert_not_called()
         assert response['statusCode'] == 401
 
+# Test Invoice Endpoints
+#class TestLambdaCreateInvoice:
+#    @patch('src.lambda_function.createInvoice')
+#    def test_post_invoice_routes_correctly(self, mock_create):
+#        mock_create.return_value = {'statusCode': 201}
+#        response = lambda_handler(make_event('POST', INVOICE_PATH), {})
+#        mock_create.assert_called_once()
+#        assert response['statusCode'] == 201
+
+
+#class TestLambdaRetrieveInvoice:
+#    @patch('src.lambda_function.retrieveInvoiceById')
+#    def test_get_invoice_by_id_routes_correctly(self, mock_retrieve):
+#        mock_retrieve.return_value = {'statusCode': 200}
+#        response = lambda_handler(make_event('GET', f'{INVOICE_PATH}/INV-123', path_params={'invoice_id': 'INV-123'}), {})
+#        mock_retrieve.assert_called_once_with('INV-123')
+#        assert response['statusCode'] == 200
+
+
+#class TestLambdaUpdateInvoice:
+#    @patch('src.lambda_function.updateInvoiceById')
+#    def test_put_invoice_routes_correctly(self, mock_update):
+#        mock_update.return_value = {'statusCode': 200}
+#        response = lambda_handler(make_event('PUT', f'{INVOICE_PATH}/INV-123', path_params={'invoice_id': 'INV-123'}), {})
+#        mock_update.assert_called_once_with('INV-123')
+#        assert response['statusCode'] == 200
+
+
+#class TestLambdaDeleteInvoice:
+#    @patch('src.lambda_function.deleteInvoiceById')
+#    def test_delete_invoice_routes_correctly(self, mock_delete):
+#        mock_delete.return_value = {'statusCode': 200}
+#        response = lambda_handler(make_event('DELETE', f'{INVOICE_PATH}/INV-123', path_params={'invoice_id': 'INV-123'}), {})
+#        mock_delete.assert_called_once_with('INV-123')
+#        assert response['statusCode'] == 204
+
+
+#class TestLambdaInvoiceStatus:
+#    @patch('src.lambda_function.ChangeInvoiceStatus')
+#    def test_post_invoice_status_routes_correctly(self, mock_status):
+#        mock_status.return_value = {'statusCode': 200}
+#        response = lambda_handler(make_event('POST', f'{INVOICE_PATH}/INV-123/status', path_params={'invoice_id': 'INV-123'}), {})
+#        mock_status.assert_called_once_with('INV-123')
+#        assert response['statusCode'] == 200
+
+
+#class TestLambdaCreateCreditNote:
+#    @patch('src.lambda_function.createCreditNote')
+#    def test_post_credit_note_routes_correctly(self, mock_credit):
+#        mock_credit.return_value = {'statusCode': 201}
+#        response = lambda_handler(make_event('POST', f'{INVOICE_PATH}/INV-123/credit-notes', path_params={'invoice_id': 'INV-123'}), {})
+#        mock_credit.assert_called_once_with('INV-123')
+#        assert response['statusCode'] == 201
+
+
+#class TestLambdaInvoiceToPdf:
+#    @patch('src.lambda_function.InvoiceToPdf')
+#    def test_get_invoice_pdf_routes_correctly(self, mock_pdf):
+#        mock_pdf.return_value = {'statusCode': 200}
+#        response = lambda_handler(make_event('GET', f'{INVOICE_PATH}/INV-123/pdf', path_params={'invoice_id': 'INV-123'}), {})
+#        mock_pdf.assert_called_once_with('INV-123')
+#        assert response['statusCode'] == 200
 
 class TestLambdaValidateOrder:
     @patch('src.lambda_function.validate_order')
