@@ -36,4 +36,3 @@ class Test:
     
         deleteInvoiceResponse = deleteInvoiceById(invoice_id)
         assert deleteInvoiceResponse["statusCode"] == 204
- """
