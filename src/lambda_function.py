@@ -10,7 +10,7 @@ from src.retrieve_despatch import retrieve_despatch
 from src.generate_despatch import generate_despatch
 from src.retrieve_all_despatch import retrieve_all_despatch_advice
 from src.update_despatch import update_despatch_advice
-from src.auth_service import register, login, logout
+from src.auth_service import register, login, logout, google_login
 from src.auth_dependencies import get_auth_context
 from src.invoice_handling import createInvoice, retrieveInvoiceById, updateInvoiceById, deleteInvoiceById, createCreditNote, InvoiceStatus, InvoiceToPdf
 from src.api_keys_auth import require_api_key,extract_api_key
@@ -28,6 +28,7 @@ AUTH_BASE = '/api/auth'
 AUTH_REGISTER_PATH = AUTH_BASE + '/register'
 AUTH_LOGIN_PATH = AUTH_BASE + '/login'
 AUTH_LOGOUT_PATH = AUTH_BASE + '/logout'
+GOOGLE_AUTH_PATH = AUTH_BASE + '/google'
 
 # Invoice Constants
 INVOICE_PATH = '/v1/invoices'
@@ -156,6 +157,8 @@ def lambda_handler(event, context):
                 'headers': {'Content-Type': 'text/html'},
                 'body': swagger_ui()
             }
+        elif http_method == 'POST' and path == GOOGLE_AUTH_PATH:
+            return google_login(event)
 
         # Order routes
         elif http_method == 'POST' and path == '/api/cart/items':
