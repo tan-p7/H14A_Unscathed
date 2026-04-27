@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import SellerDashboardLayout from '../../components/seller/SellerDashboardLayout'
 import { useNavigate } from 'react-router-dom'
 
+const API = import.meta.env.VITE_API_URL ?? '/atlas'
+
 export default function CreateDespatch() {
     const navigate = useNavigate()
 
@@ -44,7 +46,7 @@ export default function CreateDespatch() {
             setUploadedAndParsed(false)
             const fetchNextId = async () => {
                 const token = localStorage.getItem('accessToken')
-                const response = await fetch('/atlas/api/despatch/next-id', {
+                const response = await fetch(`${API}/api/despatch/next-id`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 })
                 const data = await response.json()
@@ -57,7 +59,7 @@ export default function CreateDespatch() {
             const fetchOrders = async () => {
                 const token = localStorage.getItem('accessToken')
                 try {
-                    const response = await fetch('/atlas/api/order/order', {
+                    const response = await fetch(`${API}/api/order/order`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     })
                     if (!response.ok) { setOrderLoading(false); return }
@@ -83,7 +85,7 @@ export default function CreateDespatch() {
         const token = localStorage.getItem('accessToken')
 
         // Fetch the full XML for this order
-        const response = await fetch(`/atlas/api/order/order/${order.id}`, {
+        const response = await fetch(`${API}/api/order/order/${order.id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         })
         if (!response.ok) return
@@ -108,7 +110,7 @@ export default function CreateDespatch() {
         setCountry(getNS('IdentificationCode'))
 
         // Get next despatch ID
-        const res = await fetch('/atlas/api/despatch/next-id', {
+        const res = await fetch(`${API}/api/despatch/next-id`, {
             headers: { 'Authorization': `Bearer ${token}` }
         })
         const data = await res.json()
@@ -138,7 +140,7 @@ export default function CreateDespatch() {
         setPostalZone(getNS('PostalZone'))
         setCountry(getNS('IdentificationCode'))
         const token = localStorage.getItem('accessToken')
-        const res = await fetch('/atlas/api/despatch/next-id', { headers: { 'Authorization': `Bearer ${token}` } })
+        const res = await fetch(`${API}/api/despatch/next-id`, { headers: { 'Authorization': `Bearer ${token}` } })
         const data = await res.json()
         setDocId(data.nextId)
         setUploadedAndParsed(true)
@@ -148,7 +150,7 @@ export default function CreateDespatch() {
         if (!file && mode !== 'manual' && !uploadedAndParsed) return
         const token = localStorage.getItem('accessToken')
         const body = `<?xml version="1.0" encoding="UTF-8"?><Order xmlns="urn:oasis:names:specification:ubl:schema:xsd:Order-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"><cbc:ID>${orderRefId}</cbc:ID><cbc:IssueDate>${issueDate}</cbc:IssueDate><cac:OrderReference><cbc:ID>${orderRefId}</cbc:ID><cbc:IssueDate>${issueDate}</cbc:IssueDate></cac:OrderReference><cac:SellerSupplierParty><cac:Party><cac:PartyName><cbc:Name>${supplierPartyName}</cbc:Name></cac:PartyName></cac:Party></cac:SellerSupplierParty><cac:BuyerCustomerParty><cac:Party><cac:PartyName><cbc:Name>${customerPartyName}</cbc:Name></cac:PartyName><cac:PostalAddress><cbc:StreetName>${streetName}</cbc:StreetName><cbc:CityName>${cityName}</cbc:CityName><cbc:PostalZone>${postalZone}</cbc:PostalZone><cbc:CountrySubentity>${state}</cbc:CountrySubentity><cac:Country><cbc:IdentificationCode>${country}</cbc:IdentificationCode></cac:Country></cac:PostalAddress></cac:Party></cac:BuyerCustomerParty></Order>`
-        const response = await fetch('/atlas/api/despatch/despatch-advice', {
+        const response = await fetch(`${API}/api/despatch/despatch-advice`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/xml', 'Authorization': `Bearer ${token}` },
             body

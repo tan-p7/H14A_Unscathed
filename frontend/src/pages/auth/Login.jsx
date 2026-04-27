@@ -70,7 +70,7 @@ export default function Login() {
             <div
                 className="min-h-screen flex items-center justify-center"
                 style={{
-                    backgroundImage: "url('/babyblue_background.jpg')",
+                    backgroundImage: `url('${import.meta.env.BASE_URL}babyblue_background.jpg')`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center'
                 }}

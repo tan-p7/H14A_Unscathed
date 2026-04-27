@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import SellerDashboardLayout from '../../components/seller/SellerDashboardLayout'
 
+const API = import.meta.env.VITE_API_URL ?? '/atlas'
+
 export default function Orders() {
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
@@ -14,7 +16,7 @@ export default function Orders() {
         const fetchOrders = async () => {
             const token = localStorage.getItem('accessToken')
             try {
-                const response = await fetch('/atlas/api/order/order', {
+                const response = await fetch(`${API}/api/order/order`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 })
                 if (!response.ok) { setLoading(false); return }
@@ -52,7 +54,7 @@ export default function Orders() {
     const handleDelete = async () => {
         const token = localStorage.getItem('accessToken')
         await Promise.all(selected.map(id =>
-            fetch(`/atlas/api/order/order/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } })
+            fetch(`${API}/api/order/order/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } })
         ))
         setOrders(prev => prev.filter(o => !selected.includes(o.id)))
         setSelected([])

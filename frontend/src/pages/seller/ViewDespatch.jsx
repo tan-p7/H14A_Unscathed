@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import SellerDashboardLayout from '../../components/seller/SellerDashboardLayout'
 
+const API = import.meta.env.VITE_API_URL ?? '/atlas'
+
 export default function ViewDespatch() {
     const { id } = useParams()
     const navigate = useNavigate()
@@ -31,7 +33,7 @@ export default function ViewDespatch() {
     useEffect(() => {
         const fetchDespatch = async () => {
             const token = localStorage.getItem('accessToken')
-            const response = await fetch(`/atlas/api/despatch/despatch-advice/${id}`, {
+            const response = await fetch(`${API}/api/despatch/despatch-advice/${id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
             const data = await response.text()
@@ -65,7 +67,7 @@ export default function ViewDespatch() {
         if (backorderReason === 'Other' && !backorderReasonOther) { setError('Please complete all fields'); return }
 
         const token = localStorage.getItem('accessToken')
-        const response = await fetch(`/atlas/api/despatch/despatch-advice/${id}`, {
+        const response = await fetch(`${API}/api/despatch/despatch-advice/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({

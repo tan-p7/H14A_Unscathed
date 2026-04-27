@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import SellerDashboardLayout from '../../components/seller/SellerDashboardLayout'
 
+const API = import.meta.env.VITE_API_URL ?? '/atlas'
+
 export default function Despatch() {
     const [despatchList, setDespatchList] = useState([])
     const [search, setSearch] = useState('')
@@ -15,7 +17,7 @@ export default function Despatch() {
     useEffect(() => {
         const fetchDespatches = async () => {
             const token = localStorage.getItem('accessToken')
-            const response = await fetch('/atlas/api/despatch/despatch-advice', {
+            const response = await fetch(`${API}/api/despatch/despatch-advice`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
             if (!response.ok) { setLoading(false); return }
@@ -45,7 +47,7 @@ export default function Despatch() {
 
     const handleDeleteSelected = async () => {
         const token = localStorage.getItem('accessToken')
-        await Promise.all(selected.map(id => fetch(`/atlas/api/despatch/despatch-advice/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } })))
+        await Promise.all(selected.map(id => fetch(`${API}/api/despatch/despatch-advice/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } })))
         setDespatchList(prev => prev.filter(d => !selected.includes(d.id)))
         setSelected([])
         setShowConfirm(false)
@@ -56,7 +58,7 @@ export default function Despatch() {
         setShowStatusMenu(false)
         const token = localStorage.getItem('accessToken')
         await Promise.all(selected.map(id =>
-            fetch(`/atlas/api/despatch/despatch-advice/${id}`, {
+            fetch(`${API}/api/despatch/despatch-advice/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ status: newStatus })

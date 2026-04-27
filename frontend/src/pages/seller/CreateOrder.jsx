@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SellerDashboardLayout from '../../components/seller/SellerDashboardLayout'
 
+const API = import.meta.env.VITE_API_URL ?? '/atlas'
+
 const EMPTY_LINE = { itemName: '', description: '', quantity: '1', unitCode: 'EA', unitPrice: '' }
 
 export default function CreateOrder() {
@@ -124,7 +126,7 @@ export default function CreateOrder() {
 
         const token = localStorage.getItem('accessToken')
         try {
-            const response = await fetch('/atlas/api/order/order', {
+            const response = await fetch(`${API}/api/order/order`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import SellerDashboardLayout from '../../components/seller/SellerDashboardLayout'
 
+const API = import.meta.env.VITE_API_URL ?? '/atlas'
+
 const STANDARDS = [
     { code: 'AU', label: 'Australia / New Zealand', standard: 'PEPPOL BIS Billing 3.0', description: 'Required for Australian and New Zealand government invoicing, broadly used across industries' },
     { code: 'SG', label: 'Singapore', standard: 'InvoiceNow (PEPPOL)', description: "InvoiceNow is Singapore's national e-invoicing network, built on PEPPOL" },
@@ -58,7 +60,7 @@ export default function GenerateInvoice() {
     useEffect(() => {
         const fetchDespatch = async () => {
             const token = localStorage.getItem('accessToken')
-            const response = await fetch(`/atlas/api/despatch/despatch-advice/${id}`, {
+            const response = await fetch(`${API}/api/despatch/despatch-advice/${id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
             const data = await response.text()
@@ -203,7 +205,7 @@ export default function GenerateInvoice() {
         const token = localStorage.getItem('accessToken')
         console.log('token:', token)
         try {
-            const response = await fetch('/atlas/api/invoice/invoice', {
+            const response = await fetch(`${API}/api/invoice/invoice`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({
