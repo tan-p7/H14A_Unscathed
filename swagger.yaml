@@ -622,8 +622,6 @@ paths:
         response indicates whether the document is valid and lists any
         validation errors reported by the upstream validator.
       operationId: validateOrder
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         description: Raw UBL Order XML document to validate.
@@ -640,12 +638,6 @@ paths:
                 $ref: '#/components/schemas/ValidationResponse'
         '400':
           description: Bad Request - the upstream validator rejected the request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericError'
-        '401':
-          description: Unauthorized - missing or invalid Bearer token
           content:
             application/json:
               schema:
@@ -668,8 +660,6 @@ paths:
         service. The response indicates whether the document is valid and
         lists any validation errors reported by the upstream validator.
       operationId: validateDespatch
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         description: Raw UBL Despatch Advice XML document to validate.
@@ -686,12 +676,6 @@ paths:
                 $ref: '#/components/schemas/ValidationResponse'
         '400':
           description: Bad Request - the upstream validator rejected the request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericError'
-        '401':
-          description: Unauthorized - missing or invalid Bearer token
           content:
             application/json:
               schema:
@@ -714,8 +698,6 @@ paths:
         response indicates whether the document is valid and lists any
         validation errors reported by the upstream validator.
       operationId: validateInvoice
-      security:
-        - bearerAuth: []
       requestBody:
         required: true
         description: Raw UBL Invoice XML document to validate.
@@ -736,12 +718,6 @@ paths:
                 $ref: '#/components/schemas/ValidationResponse'
         '400':
           description: Bad Request - the upstream validator rejected the request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericError'
-        '401':
-          description: Unauthorized - missing or invalid Bearer token
           content:
             application/json:
               schema:
