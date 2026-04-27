@@ -6,15 +6,220 @@ info:
     This is a SaaS cloud model API that can be used to process and manage Despatch Advice business documents. The service accepts UBL-standard Order and Despatch Advice documents to generate, retrieve, update, and delete Despatch Advice documents.
 servers:
   - description: Despatch Advice Processing API Servers
-    url: https://virtserver.swaggerhub.com/unsw-7ef/despatch-advices/1.0.0
+    url: https://y1j7xv2ua6.execute-api.us-east-1.amazonaws.com/v2
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/unsw-7ef/Unscathed_Despatch_API/1.0.0
 tags:
-  - name: Paths
-  - name: Auth
+  - name: User Authorisation
+  - name: Despatch Handling v1
+  - name: Despatch Handling v2
+  - name: Document Validation
 paths:
-  /api/auth/register:
+  /v1/api/despatch/health:
+    get:
+      tags:
+        - Despatch Handling v1
+      summary: Check the aliveness of the service
+      description: Check whether the state of the server is operational.
+      operationId: checkHealthV1
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthSuccess'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+  /v1/api/despatch/despatch-advice:
+    get:
+      tags:
+        - Despatch Handling v1
+      summary: Retrieve all despatch advice documents
+      description: Retrieve all despatch advice documents stored in the database.
+      operationId: retrieveAllDespatchesV1
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/DespatchDoc'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
     post:
       tags:
-        - Auth
+        - Despatch Handling v1
+      summary: Generate a despatch advice document
+      description: Generate a despatch advice document using an order document and user-provided inputs.
+      operationId: generateDespatchV1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerationInput'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/DespatchDoc'
+        '400':
+          description: Bad Request - Multiple possible causes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+              examples:
+                MissingRequiredField:
+                  value:
+                    message: "Missing required field"
+                InvalidElementType:
+                  value:
+                    message: "Invalid element type provided"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+  /v1/api/despatch/despatch-advice/{despatch-id}:
+    get:
+      tags:
+        - Despatch Handling v1
+      summary: Retrieve a despatch advice document
+      description: Given a despatch advice ID, retrieve the corresponding despatch advice document stored in the database.
+      operationId: retrieveDespatchByIdV1
+      parameters:
+        - name: despatch-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 565899
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/DespatchDoc'
+        '400':
+          description: Despatch advice not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+              examples:
+                DespatchAdviceNotFound:
+                  value:
+                    message: "Despatch advice 1 not found"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    put:
+      tags:
+        - Despatch Handling v1
+      summary: Update a despatch advice document
+      description: Given a despatch advice ID, update the corresponding despatch advice document stored in the database.
+      operationId: updateDespatchByIdV1
+      parameters:
+        - name: despatch-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 565899
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFields'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/DespatchDoc'
+        '400':
+          description: Despatch advice not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+              examples:
+                DespatchAdviceNotFound:
+                  value:
+                    message: "Despatch advice 1 not found"
+                InvalidElementType:
+                  value:
+                    message: "Invalid element type provided"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+    delete:
+      tags:
+        - Despatch Handling v1
+      summary: Delete a despatch advice document
+      description: Given a despatch advice ID, delete the corresponding despatch advice document stored in the database.
+      operationId: deleteDespatchByIdV1
+      parameters:
+        - name: despatch-id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 565899
+      responses:
+        '204':
+          description: Content deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessfulDeletion'
+        '400':
+          description: Despatch advice not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+              examples:
+                DespatchAdviceNotFound:
+                  value:
+                    message: "Despatch advice 1 not found"
+                InvalidElementType:
+                  value:
+                    message: "Invalid element type provided"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+
+  /v1/api/auth/register:
+    post:
+      tags:
+        - User Authorisation
       summary: Register a user
       description: Create a new user account. Stores a bcrypt password hash in DynamoDB.
       operationId: registerUser
@@ -50,11 +255,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServerError'
 
-  /api/auth/login:
+  /v1/api/auth/login:
     post:
       tags:
-        - Auth
-      summary: Login
+        - User Authorisation
+      summary: Login a user
       description: Authenticate a user and return an access token (JWT).
       operationId: loginUser
       requestBody:
@@ -89,11 +294,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServerError'
 
-  /api/auth/logout:
+  /v1/api/auth/logout:
     post:
       tags:
-        - Auth
-      summary: Logout
+        - User Authorisation
+      summary: Logout a user
       description: |-
         Logout the current session. Requires a Bearer token.
         If a revocations table is configured, the token jti is recorded until expiry.
@@ -110,13 +315,69 @@ paths:
               schema:
                 $ref: '#/components/schemas/GenericError'
 
-  /api/despatch/health:
+  /v1/api/auth/google:
+    post:
+      tags:
+        - User Authorisation
+      summary: Sign in with Google
+      description: |-
+        Authenticate a user via a Google ID token. The token is verified against
+        Google using the configured `GOOGLE_CLIENT_ID`. If the verified Google
+        account's email is not yet registered, a new user record is created
+        automatically (auto-registration on first Google login). On success, a
+        JWT access token is returned in the same shape as the standard login
+        endpoint.
+      operationId: googleLoginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleLoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+              examples:
+                InvalidJsonBody:
+                  value:
+                    message: "Invalid JSON body"
+                MissingToken:
+                  value:
+                    message: "Token is required"
+        '401':
+          description: Invalid Google token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+              examples:
+                InvalidGoogleToken:
+                  value:
+                    message: "Invalid Google token"
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+
+  /v2/api/despatch/health:
     get:
       tags:
-        - Paths
+        - Despatch Handling v2
       summary: Check the aliveness of the service
       description: Check whether the state of the server is operational.
-      operationId: checkHealth
+      operationId: checkHealthV2
       responses:
         '200':
           description: Successful operation
@@ -130,13 +391,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerError'
-  /api/despatch/despatch-advice:
+  /v2/api/despatch/despatch-advice:
     post:
       tags:
-        - Paths
+        - Despatch Handling v2
       summary: Generate a despatch advice document
       description: Generate a despatch advice document using an order document and user-provided inputs.
-      operationId: generateDespatch
+      operationId: generateDespatchV2
       security:
         - bearerAuth: []
       requestBody:
@@ -179,10 +440,10 @@ paths:
                 $ref: '#/components/schemas/ServerError'
     get:
       tags:
-        - Paths
+        - Despatch Handling v2
       summary: Retrieve all despatch advice documents
       description: Retrieve all despatch advice documents stored in the database.
-      operationId: retrieveAllDespatches
+      operationId: retrieveAllDespatchesV2
       security:
         - bearerAuth: []
       responses:
@@ -204,13 +465,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerError'
-  /api/despatch/despatch-advice/{despatch-id}:
+  /v2/api/despatch/despatch-advice/{despatch-id}:
     get:
       tags:
-        - Paths
+        - Despatch Handling v2
       summary: Retrieve a despatch advice document
       description: Given a despatch advice ID, retrieve the corresponding despatch advice document stored in the database.
-      operationId: retrieveDespatchById
+      operationId: retrieveDespatchByIdV2
       security:
         - bearerAuth: []
       parameters:
@@ -251,10 +512,10 @@ paths:
                 $ref: '#/components/schemas/ServerError'
     put:
       tags:
-        - Paths
+        - Despatch Handling v2
       summary: Update a despatch advice document
       description: Given a despatch advice ID, update the corresponding despatch advice document stored in the database.
-      operationId: updateDespatchById
+      operationId: updateDespatchByIdV2
       security:
         - bearerAuth: []
       parameters:
@@ -304,10 +565,10 @@ paths:
                 $ref: '#/components/schemas/ServerError'
     delete:
       tags:
-        - Paths
+        - Despatch Handling v2
       summary: Delete a despatch advice document
       description: Given a despatch advice ID, delete the corresponding despatch advice document stored in the database.
-      operationId: deleteDespatchById
+      operationId: deleteDespatchByIdV2
       security:
         - bearerAuth: []
       parameters:
@@ -350,6 +611,148 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServerError'
 
+  /api/validate/order:
+    post:
+      tags:
+        - Document Validation
+      summary: Validate a UBL Order document
+      description: |-
+        Validate the structure and content of a UBL Order XML document by
+        forwarding it to the configured external validation service. The
+        response indicates whether the document is valid and lists any
+        validation errors reported by the upstream validator.
+      operationId: validateOrder
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        description: Raw UBL Order XML document to validate.
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/OrderDoc'
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResponse'
+        '400':
+          description: Bad Request - the upstream validator rejected the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        '401':
+          description: Unauthorized - missing or invalid Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        '503':
+          description: Service unavailable - upstream validator could not be reached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+
+  /api/validate/despatch:
+    post:
+      tags:
+        - Document Validation
+      summary: Validate a UBL Despatch Advice document
+      description: |-
+        Validate the structure and content of a UBL Despatch Advice XML
+        document by forwarding it to the configured external validation
+        service. The response indicates whether the document is valid and
+        lists any validation errors reported by the upstream validator.
+      operationId: validateDespatch
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        description: Raw UBL Despatch Advice XML document to validate.
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/DespatchDoc'
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResponse'
+        '400':
+          description: Bad Request - the upstream validator rejected the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        '401':
+          description: Unauthorized - missing or invalid Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        '503':
+          description: Service unavailable - upstream validator could not be reached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+
+  /api/validate/invoice:
+    post:
+      tags:
+        - Document Validation
+      summary: Validate a UBL Invoice document
+      description: |-
+        Validate the structure and content of a UBL Invoice XML document by
+        forwarding it to the configured external validation service. The
+        response indicates whether the document is valid and lists any
+        validation errors reported by the upstream validator.
+      operationId: validateInvoice
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        description: Raw UBL Invoice XML document to validate.
+        content:
+          application/xml:
+            schema:
+              type: string
+              description: UBL Invoice XML document as a raw string.
+              example: |-
+                <?xml version="1.0" encoding="UTF-8"?>
+                <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"></Invoice>
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationResponse'
+        '400':
+          description: Bad Request - the upstream validator rejected the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        '401':
+          description: Unauthorized - missing or invalid Bearer token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        '503':
+          description: Service unavailable - upstream validator could not be reached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerError'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -374,6 +777,20 @@ components:
           description: A human-readable message describing the error
       required:
         - message
+    ValidationResponse:
+      type: object
+      required: [valid, errors]
+      properties:
+        valid:
+          type: boolean
+          description: True if the upstream validator reported no errors.
+          example: true
+        errors:
+          type: array
+          description: List of validation error messages reported by the upstream validator. Empty when `valid` is true.
+          items:
+            type: string
+          example: []
     GenerationInput:
       type: object
       properties:
@@ -425,7 +842,7 @@ components:
         IssueTime:
           type: string
           format: date-time
-          example: 12:00:00
+          example: 2025-03-03T12:00:00Z
         Note:
           type: string
           example: Sample order
@@ -457,7 +874,7 @@ components:
         IssueTime:
           type: string
           format: date-time
-          example: 12:00:00
+          example: 2025-03-03T12:00:00Z
         Note:
           type: string
           example: Sample despatch advice
@@ -590,3 +1007,15 @@ components:
           type: integer
           description: Token TTL in seconds
           example: 3600
+
+    GoogleLoginRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          description: |-
+            Google-issued ID token (JWT) obtained from the Google Sign-In flow on
+            the client. Verified server-side using `google-auth` against the
+            configured Google OAuth client ID.
+          example: eyJhbGciOiJSUzI1NiIsImtpZCI6IjEyMzQ1Njc4OTAifQ.eyJpc3MiOiJhY2NvdW50cy5nb29nbGUuY29tIn0.signature
