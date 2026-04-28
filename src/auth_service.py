@@ -15,6 +15,7 @@ from src.constants import JSON_TYPE
 import src.users_db as users_db
 from src.auth_tokens import create_access_token, decode_and_verify
 import jwt
+from src.google_auth import verify_google_token
 
 MIN_PASSWORD_LENGTH = 8
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -134,3 +135,52 @@ def logout(event):
         users_db.put_revoked_jti(jti, int(exp))
 
     return build_response(204, JSON_TYPE, "")
+
+
+def google_login(event):
+    """POST /api/auth/google — JSON { token }"""
+    body = _parse_json_body(event.get("body") or "")
+    if body is None:
+        return build_response(400, JSON_TYPE, "Invalid JSON body")
+
+    token = body.get("token")
+    if not token:
+        return build_response(400, JSON_TYPE, "Token is required")
+
+    user_info = verify_google_token(token)
+    if not user_info:
+        return build_response(401, JSON_TYPE, "Invalid Google token")
+
+    email = user_info["email"]
+    name = user_info.get("name") or ""
+
+    # Check if user exists
+    user = users_db.get_user_by_email(email)
+
+    if not user:
+        # Auto-register Google users
+        user_id = str(uuid.uuid4())
+        created_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        users_db.create_user(
+            user_id,
+            email,
+            "",  # no password
+            name,
+            created_at
+        )
+    else:
+        user_id = user["user_id"]
+
+    # Issue JWT (same as normal login)
+    token, _jti, expires_in = create_access_token(user_id, email)
+
+    return build_response(
+        200,
+        JSON_TYPE,
+        {
+            "accessToken": token,
+            "tokenType": "Bearer",
+            "expiresIn": expires_in,
+        },
+    )
