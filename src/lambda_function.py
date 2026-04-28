@@ -58,29 +58,16 @@ def _require_auth_or_api_key(event):
     return None, blocked
 
 def lambda_handler(event, context):
-    """Handles requests coming from API Gateway and calls the appropriate route to manage despatch advices stored in the DynamoDB table.
-
-    Args:
-        Event: JSON-formatted data structure that triggers the Lambda function to run
-        Context: Object that provides runtime information about the function
-
-    Returns:
-        Response: Response dict with statusCode, headers, and body
-    """
-
     try:
-        # Get information relevant to the http request
         http_method = event.get('httpMethod')
         path = event.get('path')
         path_parameters = event.get('pathParameters')        
 
-        # CORS preflight (browser SPA)
         if http_method == 'OPTIONS' and (
             path.startswith(AUTH_BASE) or path.startswith(BASE_URL)
         ):
             return build_response(204, JSON_TYPE, "")
 
-        # Auth routes (public)
         if http_method == 'POST' and path == AUTH_REGISTER_PATH:
             return register(event)
         if http_method == 'POST' and path == AUTH_LOGIN_PATH:
@@ -88,7 +75,6 @@ def lambda_handler(event, context):
         if http_method == 'POST' and path == AUTH_LOGOUT_PATH:
             return logout(event)
 
-        # Determine the API endpoint requested and call the appropriate function
         if http_method == 'GET' and path == HEALTH_CHECK_PATH:
             return health_check(event, context)
         elif http_method == 'POST'and path == AUTH_BASE + '/create-api-key':
@@ -121,12 +107,9 @@ def lambda_handler(event, context):
                 response = blocked
             else:
                 despatch_id = event['pathParameters'].get('despatch-id')
-
-                # Validate despatch_id is provided and non-empty
                 if not despatch_id:
                     response = build_response(404, JSON_TYPE, "Not Found")
                 else:
-                    # Pass through as string to match DynamoDB partition key type
                     response = retrieve_despatch(claims.get("email"), despatch_id)
         elif http_method == 'PUT' and path.startswith(DESPATCH_ADVICE_PATH) and path_parameters:
             claims, blocked = _require_auth_or_api_key(event)
@@ -135,7 +118,6 @@ def lambda_handler(event, context):
             else:
                 despatch_id = event['pathParameters'].get('despatch-id')
                 body = event.get('body') or '{}'
-
                 if not despatch_id:
                     response = build_response(404, JSON_TYPE, "Not Found")
                 else:
@@ -146,7 +128,6 @@ def lambda_handler(event, context):
                 response = blocked
             else:
                 despatch_id = event['pathParameters'].get('despatch-id')
-
                 if not despatch_id:
                     response = build_response(404, JSON_TYPE, "Not Found")
                 else:
@@ -288,12 +269,12 @@ def lambda_handler(event, context):
         else:
             response = build_response(404, JSON_TYPE, 'Not Found')
 
-    # Handle any errors raised accordingly
     except Exception as e:
         print('Error:', e)
         response = build_response(500, JSON_TYPE, 'Server error: Error processing request')
 
     return response
+
 
 def swagger_ui():
     return """<!DOCTYPE html>
@@ -319,20 +300,7 @@ def swagger_ui():
 </html>"""
 
 
-
-
 def health_check(event, context):
-    """Handles health check requests from API Gateway by verifying that the service and DynamoDB table are operational.
-    Args:
-        Event: JSON-formatted data structure sent by API Gateway that contains request
-               information such as the HTTP method and request path.
-        Context: Object that provides runtime information about the function
-
-    Returns:
-        Response: JSON object structure containing the HTTP statusCode, Content-Type,
-                  and body message.
-    """
-
     try:
         status = src.db.dynamodb_table.table_status
         if status == 'ACTIVE':

@@ -1,5 +1,7 @@
 import json
+import base64
 import xml.etree.ElementTree as ET
+from src.counter import get_next_despatch_id
 import xmlschema
 import uuid
 from datetime import datetime, timedelta
@@ -199,7 +201,8 @@ def generate_despatch(order_xml_string, email_id: str):
         da = ET.Element(f'{{{NS_UBL}}}DespatchAdvice') 
 
         # Use a string despatch_id to match DynamoDB partition key type
-        despatch_id = str(uuid.uuid4().int)[:9]
+        from src.counter import get_next_despatch_id
+        despatch_id = get_next_despatch_id()
         cbc_add(da, 'UBLVersionID',          '2.0')
         cbc_add(da, 'CustomizationID',       'urn:oasis:names:specification:ubl:xpath:DespatchAdvice-2.0:sbs-1.0-draft')
         cbc_add(da, 'ProfileID',             'bpid:urn:oasis:names:draft:bpss:ubl-2-sbs-despatch-advice-notification-draft')
