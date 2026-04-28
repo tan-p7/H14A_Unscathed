@@ -6,7 +6,7 @@ info:
     This is a SaaS cloud model API that can be used to process and manage Despatch Advice business documents. The service accepts UBL-standard Order and Despatch Advice documents to generate, retrieve, update, and delete Despatch Advice documents.
 servers:
   - description: Despatch Advice Processing API Servers
-    url: https://y1j7xv2ua6.execute-api.us-east-1.amazonaws.com/v2
+    url: https://7ng4l9r5f2.execute-api.us-east-1.amazonaws.com/v2
   # Added by API Auto Mocking Plugin
   - description: SwaggerHub API Auto Mocking
     url: https://virtserver.swaggerhub.com/unsw-7ef/Unscathed_Despatch_API/1.0.0
